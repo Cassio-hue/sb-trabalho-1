@@ -1,0 +1,74 @@
+Introdução.
+- Implementação na Linguagem de Programação C/C++.
+- Assembly inventado visto em sala de aula.
+
+Arquivo README.
+- Nome dos alunos do grupo.
+- Matrícula dos alunos do grupo.
+- Sistema operacional utilizado.
+- Como compilar o programa.
+- Como rodar o programa.
+- Usar linha de comando.
+
+Desenvolvimento.
+- Compilador GCC ou G++.
+- IDE CodeBlocks.
+- Compilar e rodar o programa em 2 computadores diferentes.
+- Compilar e rodar o programa em 2 sistemas operacionais diferentes.
+- Não é permitido o uso de bibliotecas adicionais.
+- É permitido o uso de bibliotecas padrões de C/C++ com stdlib, stdio e math.
+
+Montador.
+- Deve ser chamado de "montador".
+- 2 modos de execução.
+- Ao rodar "./montador myfile.asm" gerar um arquivo pré-processado chamado de "myfile.pre".
+- Ao rodar "./montador myfile.pre" gerar um arquivo processado chamado de "myfile.obj".
+- Não ser sensível ao caso.
+- Aceitar maiúsculas e minúsculas em qualquer lugar do código.
+- Aceitar espaços em branco e tabulações em qualquer lugar do código.
+- Aceitar enter desnecessários em qualquer lugar do código.
+- Aceitar comentário em qualquer lugar do código.
+- Aceitar quebra de linha entre rótulo e operação.
+- No comando "copy" os argumentos estarão separados por vírgula sem espaço.
+
+Pré Processamento.
+- Dividido em seções TEXT e DATA
+- Ao compilar e pré processar, seção TEXT vem primeiro e seção DATA vem depois.
+- A diretiva CONST deve aceitar positivos, negativos e hexadecimais no formato Ox.
+- Pode dar rótulo seguido de dois pontos e ENTER.
+- O rótulo é considerado como da linha seguinte.
+- Remover o comentário no pré processamento de EQU e IF.
+- As diretivas SPACE e CONST sempre estarão no final do código.
+- A saída deve ser um arquivo de texto sem comentários.
+
+Montagem.
+- Operar de 2 formas (modos de execução) diferentes.
+- 1a Forma: Programa possui BEGIN/END.
+- 2a Forma: Programa não possui BEGIN/END.
+- 2a Forma: Programa deve entregar como saída um arquivo de texto sendo uma única linha de programa montado.
+- Na diretiva SPACE deve ser usado 00 e não XX.
+- Deve ser realizada usando algoritmo de duas passagens.
+- BEGIN/END sempre estarão na mesma posição com relação a seção TEXT e a seção DATA.
+- Detecção de erros.
+- Identificação das linhas dos erros.
+- Classificar em erro léxico, semântico ou sintático.
+- Rótulo ausente.
+- Rótulo dobrado na mesma linha.
+- Rótulo redefinido.
+- Número de operandos errado para uma instrução.
+- Erros léxicos de rótulos
+- Rótulos não podem começar com número.
+- Único caractere especial que pode ter é “_”.
+- Instrução ou diretiva inválida.
+- Se tem BEGIN e END, significa que o OBJ tem que estar em padrão pra ser ligado.
+- Se não tem BEGIN e END, significa que o OBJ não vai ser ligado.
+
+Ligador.
+- Deve ser chamado de "ligador".
+- Deve ser usado "./ligador prog1.obj prog2.obj".
+- Deve dar como saída um arquivo chamado "prog1.e".
+- A entrada deve ser os arquivos obj gerados pelo montador.
+- A saída deve ser um ".e" sendo um arquivo de texto de uma única linha igual ao obj que não precisa ser ligado
+- Funcionar com no máximo 2 arquivos unicamente.
+- O obj para ligar deve ter Tabela de Uso, Tabela de Definições e Informação de Realocação.
+- Gerar saída mesmo com erro.
