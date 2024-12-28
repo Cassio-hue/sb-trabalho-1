@@ -1,0 +1,10 @@
+É obrigatório ter no asm de entrada a seção TEXT e DATA?
+É possivel ter mais de uma quebra de linha entre as instruções?
+Exemplo:
+    ROT: 
+    COPY
+    N2,
+    N1
+
+Como tratar o EQU e IF
+    

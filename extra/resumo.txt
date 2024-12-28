@@ -35,8 +35,7 @@ Pré Processamento.
 - Dividido em seções TEXT e DATA
 - Ao compilar e pré processar, seção TEXT vem primeiro e seção DATA vem depois.
 - A diretiva CONST deve aceitar positivos, negativos e hexadecimais no formato Ox.
-- Pode dar rótulo seguido de dois pontos e ENTER.
-- O rótulo é considerado como da linha seguinte.
+- Pode dar rótulo seguido de dois pontos e ENTER. O rótulo é considerado como da linha seguinte.
 - Remover o comentário no pré processamento de EQU e IF.
 - As diretivas SPACE e CONST sempre estarão no final do código.
 - A saída deve ser um arquivo de texto sem comentários.
