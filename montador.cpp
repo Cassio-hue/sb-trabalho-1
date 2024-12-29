@@ -31,6 +31,9 @@ vector<OpcodeMap> opcodeMap = {
     {"STOP", "14"}
 };
 
+// Mapeamento das macros
+map<string, string> macroMap;
+
 string lowerCase(string &str) {
     string res = "";
     for (int i = 0; i < str.length(); i++) {
@@ -62,12 +65,10 @@ vector<string> split(string s, string delimiter) {
 }
 
 
-map<string, string> macroMap;
-
 int main(int argc, char* argv[]) {
 
     if (argc != 2) {
-        cerr << "Uso incorreto! Por favor, forneça o nome do arquivo como argumento." << endl;
+        cerr << "Forneça o nome do arquivo como argumento. Exemplo: ./montador exemplo1.asm" << endl;
         return 1;
     }
 
