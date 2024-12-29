@@ -2,7 +2,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <sstream>
 #include <regex>
 #include <map>
 
@@ -65,8 +64,16 @@ vector<string> split(string s, string delimiter) {
 
 map<string, string> macroMap;
 
-int main() {
-    ifstream inputFile("fatorial.asm");
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        cerr << "Uso incorreto! Por favor, forneça o nome do arquivo como argumento." << endl;
+        return 1;
+    }
+
+    string arquivo = argv[1];
+
+    ifstream inputFile(arquivo);
 
     if (!inputFile.is_open()) {
         cerr << "Erro ao abrir arquivos" << endl;
@@ -108,9 +115,9 @@ int main() {
             if (v[0] == "SECTION DATA") aux = 1;
 
             if (aux == 0) {
-                std::string modified = v[0];
-                modified.erase(std::remove(modified.begin(), modified.end(), '\n'), modified.end());
-                modified.erase(std::remove(modified.begin(), modified.end(), ' '), modified.end());
+                string modified = v[0];
+                modified.erase(remove(modified.begin(), modified.end(), '\n'), modified.end());
+                modified.erase(remove(modified.begin(), modified.end(), ' '), modified.end());
                 
 
 
@@ -135,8 +142,25 @@ int main() {
 
     cout << section_text << section_data;
     // for (const auto& [rotulo, macro] : macroMap) {
-    //     std::cout << "Rótulo: " << rotulo << ", Corpo: " << macroMap[rotulo] << endl;
+    //     cout << "Rótulo: " << rotulo << ", Corpo: " << macroMap[rotulo] << endl;
     // }
+
+
+    // Nome do arquivo de saída
+    string nomeArquivo = "myfile.pre";
+
+    std::ofstream file(nomeArquivo);
+    
+    if (file.is_open()) {
+        file << section_text << section_data;
+        
+        file.close();
+        cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+    } else {
+        cerr << "Erro ao abrir o arquivo!" << endl;
+    }
+
+
 
     return 0;
 }
