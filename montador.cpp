@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include <cctype>
-#include <typeinfo>
+#include <regex>
+#include <map>
 
 using namespace std;
 
@@ -33,6 +33,7 @@ vector<OpcodeMap> opcodeMap = {
 };
 
 string lowerCase(string &str) {
+    string res = "";
     for (int i = 0; i < str.length(); i++) {
         
         // Remove espaços e tababulações
@@ -40,10 +41,10 @@ string lowerCase(string &str) {
         //     str.erase(i, 1);
         // }
 
-        str[i] = tolower(str[i]);
+        res += tolower(str[i]);
     }
 
-    return str; 
+    return res; 
 }   
 
 vector<string> split(string s, string delimiter) {
@@ -61,8 +62,11 @@ vector<string> split(string s, string delimiter) {
     return res;
 }
 
+
+map<string, string> macroMap;
+
 int main() {
-    ifstream inputFile("exemplo1.asm");
+    ifstream inputFile("fatorial.asm");
 
     if (!inputFile.is_open()) {
         cerr << "Erro ao abrir arquivos" << endl;
@@ -73,8 +77,8 @@ int main() {
     string section_text = "";
     string section_data = "";
 
-    int linha = 0;
     int aux = 0;
+    string macro_flag = "";
 
     while (getline(inputFile, line)) {
         vector<string> v = split (line, ";");
@@ -83,19 +87,56 @@ int main() {
             continue;
         }
 
-        if (v[0] == "SECTION TEXT") aux = 0;
-        if (v[0] == "SECTION DATA") aux = 1;
+        // Regex para encontrar a palavra "macro" isolada
+        regex find_macro("\\bmacro\\b");
 
-        if (aux == 0) section_text += v[0] + "\n";
-        if (aux == 1) section_data += v[0] + "\n";
+        if (regex_search(lowerCase(v[0]), find_macro)) {
+            macro_flag = split(v[0], ":")[0];
+            macroMap[macro_flag] = {""};
+            continue;
+        }
 
-        // cout << v[0] << endl;
+        // Regex para encontrar a palavra "endmacro" isolada
+        regex find_endmacro("\\bendmacro\\b");
+        if (regex_search(lowerCase(v[0]), find_endmacro)) {
+            macro_flag = "";
+            continue;
+        }
+    
+        if (macro_flag == "") {
+            if (v[0] == "SECTION TEXT") aux = 0;
+            if (v[0] == "SECTION DATA") aux = 1;
 
-        // linha++;
+            if (aux == 0) {
+                std::string modified = v[0];
+                modified.erase(std::remove(modified.begin(), modified.end(), '\n'), modified.end());
+                modified.erase(std::remove(modified.begin(), modified.end(), ' '), modified.end());
+                
+
+
+                if (macroMap.find(modified) != macroMap.end()) {
+                    if (macroMap[modified].back() == '\n') {
+                        macroMap[modified].pop_back();
+                    }
+                    v[0] = macroMap[modified];
+                }
+
+                section_text += v[0] + "\n";
+            }
+
+            if (aux == 1) section_data += v[0] + "\n";
+        } else {
+            macroMap[macro_flag] += v[0] + "\n";
+        }
+
     }
 
     inputFile.close();
 
     cout << section_text << section_data;
+    // for (const auto& [rotulo, macro] : macroMap) {
+    //     std::cout << "Rótulo: " << rotulo << ", Corpo: " << macroMap[rotulo] << endl;
+    // }
+
     return 0;
 }
