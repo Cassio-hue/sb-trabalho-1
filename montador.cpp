@@ -46,6 +46,50 @@ string lowerCase(string &str) {
     return res; 
 }   
 
+string upperCase(string &str) {
+    string res = "";
+    for (int i = 0; i < str.length(); i++) {
+        
+        // Remove espaços e tababulações
+        // if (str[i] == ' ' || str[i] == '\t') {
+        //     str.erase(i, 1);
+        // }
+
+        res += toupper(str[i]);
+    }
+
+    return res; 
+} 
+
+string trim(string& str) {
+
+    auto start = find_if_not(str.begin(), str.end(), [](unsigned char ch) {
+        return isspace(ch);
+    });
+
+    auto end = find_if_not(str.rbegin(), str.rend(), [](unsigned char ch) {
+        return isspace(ch);
+    }).base();
+
+    return (start < end ? string(start, end) : string());
+}
+
+string superTrim(string& str) {
+    string result = str;
+    size_t pos = result.find(',');
+    
+    if (pos != string::npos) {
+        string before = result.substr(0, pos);
+        string after = result.substr(pos + 1);
+        
+        before = trim(before);
+        after = trim(after);
+
+        result = before + "," + after;
+    }
+    return trim(result);
+}
+
 vector<string> split(string s, string delimiter) {
     size_t pos_start = 0, pos_end, delim_len = delimiter.length();
     string token;
@@ -88,24 +132,24 @@ int main(int argc, char* argv[]) {
     string macro_flag = "";
 
     while (getline(inputFile, line)) {
-        vector<string> v = split (line, ";");
+        vector<string> v = split (upperCase(line), ";");
         
         if(v[0].empty()) {
             continue;
         }
 
         // Regex para encontrar a palavra "macro" isolada
-        regex find_macro("\\bmacro\\b");
+        regex find_macro("\\bMACRO\\b");
 
-        if (regex_search(lowerCase(v[0]), find_macro)) {
+        if (regex_search(v[0], find_macro)) {
             macro_flag = split(v[0], ":")[0];
             macroMap[macro_flag] = {""};
             continue;
         }
 
         // Regex para encontrar a palavra "endmacro" isolada
-        regex find_endmacro("\\bendmacro\\b");
-        if (regex_search(lowerCase(v[0]), find_endmacro)) {
+        regex find_endmacro("\\bENDMACRO\\b");
+        if (regex_search(v[0], find_endmacro)) {
             macro_flag = "";
             continue;
         }
@@ -128,10 +172,10 @@ int main(int argc, char* argv[]) {
                     v[0] = macroMap[modified];
                 }
 
-                section_text += v[0] + "\n";
+                section_text += superTrim(v[0]) + "\n";
             }
 
-            if (aux == 1) section_data += v[0] + "\n";
+            if (aux == 1) section_data += superTrim(v[0]) + "\n";
         } else {
             macroMap[macro_flag] += v[0] + "\n";
         }
@@ -139,6 +183,10 @@ int main(int argc, char* argv[]) {
     }
 
     inputFile.close();
+
+    if (section_data.back() == '\n') {
+      section_data.pop_back();
+    }
 
     cout << section_text << section_data;
     // for (const auto& [rotulo, macro] : macroMap) {
