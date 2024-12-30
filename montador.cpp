@@ -34,15 +34,19 @@ vector<OpcodeMap> opcodeMap = {
 // Mapeamento das macros
 map<string, string> macroMap;
 
+bool BothAreSpaces(char lhs, char rhs) { 
+    return (lhs == rhs) && (lhs == ' '); 
+}
+string removeSpaces(string &str) {
+    string::iterator res = unique(str.begin(), str.end(), BothAreSpaces);
+    str.erase(res, str.end());
+
+    return str; 
+}
+
 string lowerCase(string &str) {
     string res = "";
     for (int i = 0; i < str.length(); i++) {
-        
-        // Remove espaços e tababulações
-        // if (str[i] == ' ' || str[i] == '\t') {
-        //     str.erase(i, 1);
-        // }
-
         res += tolower(str[i]);
     }
 
@@ -52,12 +56,6 @@ string lowerCase(string &str) {
 string upperCase(string &str) {
     string res = "";
     for (int i = 0; i < str.length(); i++) {
-        
-        // Remove espaços e tababulações
-        // if (str[i] == ' ' || str[i] == '\t') {
-        //     str.erase(i, 1);
-        // }
-
         res += toupper(str[i]);
     }
 
@@ -135,7 +133,7 @@ int main(int argc, char* argv[]) {
     while (getline(inputFile, line)) {
         vector<string> v = split (upperCase(line), ";");
         
-        if(v[0].empty()) {
+        if (v[0].empty()) {
             continue;
         }
 
@@ -173,9 +171,11 @@ int main(int argc, char* argv[]) {
                     v[0] = macroMap[modified];
                 }
 
+                v[0] = removeSpaces(v[0]);
                 section_text += superTrim(v[0]) + "\n";
             }
 
+            v[0] = removeSpaces(v[0]);
             if (aux == 1) section_data += superTrim(v[0]) + "\n";
         } else {
             macroMap[macro_flag] += v[0] + "\n";
@@ -190,12 +190,8 @@ int main(int argc, char* argv[]) {
     }
 
     cout << section_text << section_data;
-    // for (const auto& [rotulo, macro] : macroMap) {
-    //     cout << "Rótulo: " << rotulo << ", Corpo: " << macroMap[rotulo] << endl;
-    // }
 
-
-    // Nome do arquivo de saída
+    // Gerando arquivo do pre-processamento
     string nomeArquivo = "myfile.pre";
 
     std::ofstream file(nomeArquivo);
@@ -204,11 +200,10 @@ int main(int argc, char* argv[]) {
         file << section_text << section_data;
         
         file.close();
-        cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+        cout << "\nArquivo " << nomeArquivo << " criado com sucesso!" << endl;
     } else {
-        cerr << "Erro ao abrir o arquivo!" << endl;
+        cerr << "\nErro ao abrir o arquivo!" << endl;
     }
-
 
 
     return 0;

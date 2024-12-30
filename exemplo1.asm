@@ -1,11 +1,6 @@
-SECTION DATA
-N1: SPACE
-N2: SPACE
-; comentario 1
 SECTION TEXT
-;teste de comentário no inicio do arquivo
-ROT: INPUT N1
-COPY N2,N1 ;isso é um comentário
-; comentário 2
-
-
+ROT: INPUT                    N1
+     COPY N2,               N1
+SECTION DATA
+N1:                               SPACE
+N2:                               SPACE
