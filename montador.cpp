@@ -7,31 +7,7 @@
 
 using namespace std;
 
-// Estrutura para mapeamento de instruções para opcodes
-struct OpcodeMap
-{
-  string instruction;
-  string opcode;
-};
-
-// Mapeamento de instruções para opcodes
-vector<OpcodeMap> opcodeMap = {
-    {"ADD", "01"},
-    {"SUB", "02"},
-    {"MUL", "03"},
-    {"DIV", "04"},
-    {"JMP", "05"},
-    {"JMPN", "06"},
-    {"JMPP", "07"},
-    {"JMPZ", "08"},
-    {"COPY", "09"},
-    {"LOAD", "10"},
-    {"STORE", "11"},
-    {"INPUT", "12"},
-    {"OUTPUT", "13"},
-    {"STOP", "14"}};
-
-// Mapeamento das macros
+// Map das macros
 map<string, string> macroMap;
 
 bool BothAreSpaces(char lhs, char rhs)
@@ -232,4 +208,112 @@ int main(int argc, char *argv[])
   }
 
   return 0;
+}
+
+map<string, int> tabelaSimbolos;
+
+// Estrutura para mapeamento de instruções para opcodes
+struct OpcodeMap
+{
+  string instruction;
+  string opcode;
+  int tamanho;
+};
+
+// Mapeamento de instruções para opcodes
+vector<OpcodeMap> tabelaInstrucoes = {
+    {"ADD", "01", 2},
+    {"SUB", "02", 2},
+    {"MUL", "03", 2},
+    {"DIV", "04", 2},
+    {"JMP", "05", 2},
+    {"JMPN", "06", 2},
+    {"JMPP", "07", 2},
+    {"JMPZ", "08", 2},
+    {"COPY", "09", 3},
+    {"LOAD", "10", 2},
+    {"STORE", "11", 2},
+    {"INPUT", "12", 2},
+    {"OUTPUT", "13", 2},
+    {"STOP", "14", 1}};
+
+
+vector<string, int> tabelaDiretivas = {
+  {"SPACE", 0},
+  {"CONST", 1},
+};
+
+void PrimeiraPassagem() {
+    int contador_posicao = 0;
+    int contador_linha = 1;
+    ifstream inputFile("myfile.pre");
+    if (!inputFile.is_open()) {
+        cerr << "Erro ao abrir arquivo de pré-processamento" << endl;
+        return;
+    }
+    string line;
+    // Enquanto arquivo fonte não chegou ao fim, faça: Obtém uma linha do fonte
+    while (getline(inputFile, line)) {
+        if (line == "SECTION TEXT" || line == "SECTION DATA") {
+            continue;
+        }
+        // Separa os elementos da linha: rótulo, operação, operandos
+        vector<string> instrucao = split(line, " ");
+        string rotulo;
+        string operacao;
+        //Se existe rótulo:
+        if(instrucao[0].find(":"))
+        {
+          // Procura rótulo na Tabela de Símbolos
+          // Se achou: Erro à símbolo redefinido
+          // cerr << "ERRO SINTÁTICO: Erro símbolo redefinido" << endl;
+          // Se não achou: Insere rótulo e contador_posição na TS
+        }
+        // Se não existe rótulo:
+        else{
+          // Procura operação na tabela de instruções
+          // Se achou: contador_posição = contador_posição + tamanho da instrução
+          // Se não achou: Procura operação na tabela de diretivas
+            // Se achou: chama subrotina que executa a diretiva contador_posição = valor retornado pela subrotina
+            // Se não achou: Erro, operação não identificada
+        }
+        // contador_linha = contador_linha + 1
+    }
+}
+
+
+void SegundaPassagem() {  
+    int contador_posicao = 0;
+    int contador_linha = 1;
+
+    string codigo_objeto = "";
+
+    ifstream inputFile("myfile.pre");
+    if (!inputFile.is_open()) {
+        cerr << "Erro ao abrir arquivo de pré-processamento" << endl;
+        return;
+    }
+    string line;
+    // Enquanto arquivo fonte não chegou ao fim, faça: Obtém uma linha do fonte
+    while (getline(inputFile, line)) {
+        if (line == "SECTION TEXT" || line == "SECTION DATA") {
+            continue;
+        }
+        // Separa os elementos da linha: rótulo, operação, operandos
+        vector<string> instrucao = split(line, " ");
+        string rotulo;
+        string operacao;
+        // Para cada operando que é símbolo, Procura operação na TS
+        // Se não achou: Erro, símbolo indefinido
+        // cerr << "ERRO SINTÁTICO: símbolo não foi definido" << endl;
+        // Procura operação na tabela de instruções
+        // Se achou: contador_posição = contador_posição + tamanho da instrução
+          // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução
+          // codigo_objeto += //coloca o que precisa
+          // Se não: Erro, operando inválido
+        // Se não achou: Procura operação na tabela de diretivas
+          // Se achou: chama subrotina que executa a diretiva contador_posição = valor retornado pela subrotina
+          // Se não achou: Erro, operação não identificada
+        // contador_linha = contador_linha + 1
+    }
 }
