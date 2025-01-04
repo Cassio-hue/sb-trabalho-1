@@ -225,21 +225,22 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           } else {
             // Se achou: contador_posição = contador_posição + valor da diretiva
             if (regex_search(operacao, regex_space)) {
-              // if (instrucao.size() == 2) {
-              //   int valor = stoi(instrucao[1]);
-              //   contador_posicao += valor;
-              // } else {
-              //   contador_posicao += tabelaDiretivas["SPACE"];
-              // }
+              if (instrucao.size() == 2) {
+                int valor = stoi(instrucao[1]);
+                contador_posicao += valor;
+              } else {
+                contador_posicao += 1;
+              }
 
               // Se não achou: Insere rótulo e contador_posição na TS
-              tabelaSimbolos[rotulo] = { tabelaDiretivas["SPACE"], 'N' };
+            //   tabelaSimbolos[rotulo] = { tabelaDiretivas["SPACE"], 'N' };
+              tabelaSimbolos[rotulo] = { contador_posicao, 'N' };
               contador_linha++;
               continue;
             }
 
             if (regex_search(operacao, regex_const)) {
-              // contador_posicao += tabelaDiretivas["CONST"];
+              contador_posicao += 1;
 
               // Se não achou: Insere rótulo e contador_posição na TS
               tabelaSimbolos[rotulo] = {stoi(instrucao[1]), 'N'};
