@@ -180,7 +180,7 @@ map<string, OpcodeInfo> tabelaInstrucoes = {
     };
 
 map<string, int> tabelaDiretivas = {
-    {"SPACE", 1}, {"CONST", 1}
+    {"SPACE", 0}, {"CONST", 0}
 };
 
 map<string, int> tabelaSimbolos;
@@ -219,24 +219,33 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           // Procura rótulo na Tabela de Símbolos
           if (tabelaSimbolos.find(rotulo) != tabelaSimbolos.end()) {
             // Se achou: Erro à símbolo redefinido
-            cerr << "ERRO SINTÁTICO: Erro símbolo redefinido" << endl;
+            cerr << "Linha: " << contador_linha << " " << "ERRO SINTÁTICO: Erro símbolo " << rotulo << " redefinido" << endl;
           } else {
-            // Se não achou: Insere rótulo e contador_posição na TS
-            tabelaSimbolos[rotulo] = contador_posicao;
             // Se achou: contador_posição = contador_posição + valor da diretiva
             if (regex_search(operacao, regex_space)) {
-              if (instrucao.size() == 2) {
-                int valor = stoi(instrucao[1]);
-                contador_posicao += valor;
-              } else {
-                contador_posicao += tabelaDiretivas["SPACE"];
-              }
+              // if (instrucao.size() == 2) {
+              //   int valor = stoi(instrucao[1]);
+              //   contador_posicao += valor;
+              // } else {
+              //   contador_posicao += tabelaDiretivas["SPACE"];
+              // }
+
+              // Se não achou: Insere rótulo e contador_posição na TS
+              tabelaSimbolos[rotulo] = tabelaDiretivas["SPACE"];
+              contador_linha++;
               continue;
             }
             if (regex_search(operacao, regex_const)) {
-              contador_posicao += tabelaDiretivas["CONST"];
+              // contador_posicao += tabelaDiretivas["CONST"];
+
+              // Se não achou: Insere rótulo e contador_posição na TS
+              tabelaSimbolos[rotulo] = stoi(instrucao[1]);
+
+              contador_linha++;
               continue;
             }
+
+            tabelaSimbolos[rotulo] = contador_posicao;
           }
 
           contador_posicao += tabelaInstrucoes[operacao].tamanho;
@@ -245,16 +254,17 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         else {
           // Procura operação na tabela de instruções
           operacao = split(superTrim(line), " ")[0];
+          // cout << "Operação = " << operacao << endl;
           if (tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()) {
             // Se achou: contador_posição = contador_posição + tamanho da instrução
             contador_posicao += tabelaInstrucoes[operacao].tamanho;
           } else {
-            cout << "Operação = " << operacao << endl;
+            cerr << "Linha: " << contador_linha << " " << "ERRO SINTÁTICO: operação " << operacao << " não identificada" << endl;
+            return;
           }
-          
         }
 
-        contador_linha = contador_linha + 1;
+      contador_linha++;
     }
 
     // Imprime a tabela de símbolos
