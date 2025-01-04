@@ -87,8 +87,8 @@ void PreProcessamento(int argc, char *argv[]) {
         cerr << "Erro ao abrir arquivos" << endl;
     }
 
-    string line, section_text = "", section_data = "";
     int aux = 0;
+    string line, section_text = "", section_data = "";
     string macro_flag = "";
 
     while (getline(inputFile, line)) {
@@ -180,10 +180,11 @@ map<string, OpcodeInfo> tabelaInstrucoes = {
     };
 
 map<string, int> tabelaDiretivas = {
-    {"SPACE", 0}, {"CONST", 0}
+    {"SPACE", 0}, {"CONST", 0}, {"BEGIN", 0}, {"END", 0}  
 };
 
-map<string, int> tabelaSimbolos;
+map<string, pair<int, char>> tabelaSimbolos;
+map<string, int>tabelaDefinicoes;
 
 void PrimeiraPassagem(int argc, char *argv[]) {
     string arquivo = argv[1];
@@ -194,10 +195,9 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         return;
     }
 
-    int contador_posicao = 0;
     int contador_linha = 1;
-    // regex para SPACE e CONST
-    regex regex_space("\\bSPACE\\b"), regex_const("\\bCONST\\b");
+    int contador_posicao = 0;
+    regex regex_space("\\bSPACE\\b"), regex_const("\\bCONST\\b"), regex_begin("\\bBEGIN\\b"), regex_end("\\bEND\\b"), regex_public("\\bPUBLIC\\b"), regex_extern("\\bEXTERN\\b");
 
     string line;
     // Enquanto arquivo fonte não chegou ao fim, faça: Obtém uma linha do fonte
@@ -208,6 +208,8 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         // Separa os elementos da linha: rótulo, operação, operandos
         string rotulo;
         string operacao;
+        string argumento;
+
         //Se existe rótulo:
         if(line.find(":") != string::npos) {
           vector<string> separacao_instrucao = split(line, ":");
@@ -231,21 +233,33 @@ void PrimeiraPassagem(int argc, char *argv[]) {
               // }
 
               // Se não achou: Insere rótulo e contador_posição na TS
-              tabelaSimbolos[rotulo] = tabelaDiretivas["SPACE"];
+              tabelaSimbolos[rotulo] = { tabelaDiretivas["SPACE"], 'N' };
               contador_linha++;
               continue;
             }
+
             if (regex_search(operacao, regex_const)) {
               // contador_posicao += tabelaDiretivas["CONST"];
 
               // Se não achou: Insere rótulo e contador_posição na TS
-              tabelaSimbolos[rotulo] = stoi(instrucao[1]);
+              tabelaSimbolos[rotulo] = {stoi(instrucao[1]), 'N'};
 
               contador_linha++;
               continue;
             }
 
-            tabelaSimbolos[rotulo] = contador_posicao;
+            if (regex_search(operacao, regex_extern)) {
+              tabelaSimbolos[rotulo] = { 0, 'S' };
+              continue;
+            }
+
+            if (regex_search(operacao, regex_begin)) {
+              tabelaSimbolos[rotulo] = { 0, 'N' };
+              tabelaDefinicoes[rotulo] = 0;
+              continue;
+            }
+
+            tabelaSimbolos[rotulo] = {contador_posicao, 'N'};
           }
 
           contador_posicao += tabelaInstrucoes[operacao].tamanho;
@@ -253,12 +267,26 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         // Se não existe rótulo:
         else {
           // Procura operação na tabela de instruções
-          operacao = split(superTrim(line), " ")[0];
-          // cout << "Operação = " << operacao << endl;
+          vector<string> instrucao = split(superTrim(line), " ");
+          operacao = instrucao[0];
+          if (instrucao.size() > 1) argumento = instrucao[1];
+
+          
           if (tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()) {
             // Se achou: contador_posição = contador_posição + tamanho da instrução
             contador_posicao += tabelaInstrucoes[operacao].tamanho;
           } else {
+            
+            if (regex_search(operacao, regex_public)) {
+            //   tabelaSimbolos[argumento] = { 0, 'N' };
+              tabelaDefinicoes[argumento] = 0;
+              continue;
+            }
+
+            if (regex_search(operacao, regex_end)) {
+              continue;
+            }
+
             cerr << "Linha: " << contador_linha << " " << "ERRO SINTÁTICO: operação " << operacao << " não identificada" << endl;
             return;
           }
@@ -268,8 +296,16 @@ void PrimeiraPassagem(int argc, char *argv[]) {
     }
 
     // Imprime a tabela de símbolos
-    cout << "Tabela de Símbolos:" << endl;
+    // Iterar e imprimir os elementos do map
     for (auto const& x : tabelaSimbolos) {
+        cout << "Rótulo: " << x.first 
+             << ", Pos: " << x.second.first 
+             << ", Externo: " << x.second.second << endl;
+    }
+
+    cout << "\n\n";
+
+    for (auto const& x : tabelaDefinicoes) {
         cout << x.first << " " << x.second << endl;
     } 
 }
