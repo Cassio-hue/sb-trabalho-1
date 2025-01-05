@@ -205,6 +205,8 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         if (line == "SECTION TEXT" || line == "SECTION DATA") {
             continue;
         }
+
+        cout << "Contador de posição: " << contador_posicao << " Instrução: " << line << endl;
         // Separa os elementos da linha: rótulo, operação, operandos
         string rotulo;
         string operacao;
@@ -225,6 +227,8 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           } else {
             // Se achou: contador_posição = contador_posição + valor da diretiva
             if (regex_search(operacao, regex_space)) {
+              tabelaSimbolos[rotulo] = { contador_posicao, 'N' };
+
               if (instrucao.size() == 2) {
                 int valor = stoi(instrucao[1]);
                 contador_posicao += valor;
@@ -234,17 +238,18 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 
               // Se não achou: Insere rótulo e contador_posição na TS
             //   tabelaSimbolos[rotulo] = { tabelaDiretivas["SPACE"], 'N' };
-              tabelaSimbolos[rotulo] = { contador_posicao, 'N' };
+              
               contador_linha++;
               continue;
             }
 
             if (regex_search(operacao, regex_const)) {
-              contador_posicao += 1;
-
+              
               // Se não achou: Insere rótulo e contador_posição na TS
-              tabelaSimbolos[rotulo] = {stoi(instrucao[1]), 'N'};
+              // tabelaSimbolos[rotulo] = {stoi(instrucao[1]), 'N'};
+              tabelaSimbolos[rotulo] = {contador_posicao, 'N'};
 
+              contador_posicao += 1;
               contador_linha++;
               continue;
             }
