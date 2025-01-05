@@ -57,7 +57,7 @@ string superTrim(string &str) {
         before = trim(before);
         after = trim(after);
 
-        result = before + "," + after;
+        result = before + ", " + after;
     }
     return trim(result);
 }
@@ -304,9 +304,7 @@ void PrimeiraPassagem(int argc, char *argv[]) {
     // Imprime a tabela de símbolos
     // Iterar e imprimir os elementos do map
     for (auto const& x : tabelaSimbolos) {
-        cout << "Rótulo: " << x.first 
-             << ", Pos: " << x.second.first 
-             << ", Externo: " << x.second.second << endl;
+        cout << "Rótulo: " << x.first << ", Pos: " << x.second.first << ", Externo: " << x.second.second << endl;
     }
 
     cout << "\n\n";
@@ -317,42 +315,137 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 }
 
 
-void SegundaPassagem() {  
-    int contador_posicao = 0;
-    int contador_linha = 1;
+void SegundaPassagem(){ 
 
-    string codigo_objeto = "";
+  int contador_posicao = 0;
+  int contador_linha = 1;
+  
+  string codigo_objeto = "";
+  string line;
 
-    ifstream inputFile("myfile.pre");
-    if (!inputFile.is_open()) {
-        cerr << "Erro ao abrir arquivo de pré-processamento" << endl;
-        return;
+  ifstream inputFile("myfile.pre");
+
+  if(!inputFile.is_open()){
+    cerr << "Erro ao abrir arquivo de pre-processamento" << endl;
+    return;
+  }
+
+  // Enquanto arquivo fonte não chegou ao fim, faça: Obtém uma linha do código fonte.
+  while(getline(inputFile, line)){
+
+    // Se a liha do código fonte for "SECTION TEXT" ou "SECTION DATA", ignore essa linha do código fonte.
+    if(line == "SECTION TEXT" || line == "SECTION DATA"){
+      continue;
     }
-    string line;
-    // Enquanto arquivo fonte não chegou ao fim, faça: Obtém uma linha do fonte
-    while (getline(inputFile, line)) {
-        if (line == "SECTION TEXT" || line == "SECTION DATA") {
-            continue;
+    // Se a liha do código fonte não for "SECTION TEXT" ou "SECTION DATA", continue o algoritmo de segunda passagem.
+    else{
+      // Separa os elementos da linha: rótulo, operação, operando1 e operando2.
+      vector<string> instrucao = split(line, " ");
+      string rotulo;
+      string operacao;
+      string operando1;
+      string operando2;
+
+      if(instrucao[0].back() == ':'){
+        rotulo = instrucao[0];
+        operacao = instrucao[1];
+        if(instrucao.size() == 2){
+          operando1 = "";
+          operando2 = "";
         }
-        // Separa os elementos da linha: rótulo, operação, operandos
-        vector<string> instrucao = split(line, " ");
-        string rotulo;
-        string operacao;
-        // Para cada operando que é símbolo, Procura operação na TS
-        // Se não achou: Erro, símbolo indefinido
-        // cerr << "ERRO SINTÁTICO: símbolo não foi definido" << endl;
-        // Procura operação na tabela de instruções
-        // Se achou: contador_posição = contador_posição + tamanho da instrução
-          // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução
-          // codigo_objeto += //coloca o que precisa
-          // Se não: Erro, operando inválido
-        // Se não achou: Procura operação na tabela de diretivas
-          // Se achou: chama subrotina que executa a diretiva contador_posição = valor retornado pela subrotina
-          // Se não achou: Erro, operação não identificada
-        // contador_linha = contador_linha + 1
+        else if(instrucao.size() == 3){
+          operando1 = instrucao[2];
+          operando2 = "";
+        }
+        else if(instrucao.size() == 4){
+          operando1 = instrucao[2];
+          operando1.pop_back();
+          operando2 = instrucao[3];
+        }
+      }
+      else{
+        rotulo = "";
+        operacao = instrucao[0];
+        if(instrucao.size() == 1){
+          operando1 = "";
+          operando2 = "";
+        }
+        else if(instrucao.size() == 2){
+          operando1 = instrucao[1];
+          operando2 = "";
+        }
+        else if(instrucao.size() == 3){
+          operando1 = instrucao[1];
+          operando1.pop_back();
+          operando2 = instrucao[2];
+        }
+      }
+      // Para cada operando que é símbolo, procura operando na Tabela de Símbolos
+      if(operacao != "CONST" && operacao != "SPACE"){
+        if(operando1 != ""){
+          // Se não achou:
+          if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
+            cerr << "ERRO: Simbolo Indefinido" << endl;
+          }
+        }
+        // Para cada operando que é símbolo, procura operando na Tabela de Símbolos
+        if(operando2 != ""){
+          // Se não achou:
+          if(tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
+            cerr << "ERRO: Simbolo Indefinido" << endl;
+          }
+        }
+      }
+      // Procura operação na Tabela de Instruções
+      // Se achou na Tabalea de Instruções:
+      if(tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()){
+        contador_posicao = contador_posicao + tabelaInstrucoes[operacao].tamanho;
+        codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
+        // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução:
+        if(operando1 != ""){
+          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operando1].first) + " ";
+        }
+        if(operando2 != ""){
+          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operando2].first) + " ";
+        }
+      }
+      // Se não achou na Tabela de Instruções:
+      // Procura operação na Tabela de Diretivas
+      else if(tabelaDiretivas.find(operacao) != tabelaDiretivas.end()){
+        // Se achou na Tabela de Diretivas:
+        // Chama subrotina que executa a diretiva
+        // contador_posicao = valor retornado pela subrotina;
+        if(operacao == "CONST"){
+          codigo_objeto = codigo_objeto + operando1 + " ";
+        }
+        else if(operacao == "SPACE"){
+          if(operando1 == ""){
+            codigo_objeto = codigo_objeto + "00" + " ";
+          }
+          else if(operando1 != ""){
+            codigo_objeto = codigo_objeto + "00 " + operando1 + " ";
+          }
+        }
+      }
+      // Se não achou na Tabela de Diretivas:
+      else{
+        cerr << "ERRO: Operacao Nao Identificada" << endl;
+      }
     }
-}
+    contador_linha = contador_linha + 1;
+  }
+  string nomeArquivo = "myfile.obj";
+  ofstream file(nomeArquivo);
 
+  if(file.is_open()){
+    file << codigo_objeto;
+    file.close();
+    cout << "\nArquivo " << nomeArquivo << " criado com sucesso!" << endl;
+  }
+  else {
+    cerr << "\nErro ao abrir o arquivo!" << endl;
+  }
+}
 
 // Funções principais
 int main(int argc, char *argv[]) {
@@ -375,7 +468,7 @@ int main(int argc, char *argv[]) {
 
   if (regex_match(argv[1], regex_pre_file)) {
     PrimeiraPassagem(argc, argv);
-    // SegundaPassagem();
+    SegundaPassagem();
   }
 
 
