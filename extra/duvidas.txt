@@ -8,7 +8,8 @@ Exemplo:
 
 Como tratar o EQU e IF
 
-
 Nos slides o exemplo de BEGIN e END é assim: MOD_A: BEGIN
 No codigo de exmplo está assim: BEGIN: MOD_A
 Precisa ter espaço depois da virgula no copy?
+
+Macro dentro de macro e macro com parâmetros

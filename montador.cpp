@@ -4,8 +4,42 @@
 #include <vector>
 #include <regex>
 #include <map>
+#include <iomanip>
 
 using namespace std;
+bool PRINT_DEBUG = true;
+void printTable(const map<string, pair<int, char>>& tabelaSimbolos, 
+                const map<string, int>& tabelaDefinicoes) {
+    // Imprimindo a tabela de símbolos
+    cout << '\n';
+
+    cout << "+----------------+--------+---------+\n";
+    cout << "| Rótulo         | Pos    | Externo |\n";
+    cout << "+----------------+--------+---------+\n";
+
+    for (const auto& x : tabelaSimbolos) {
+        cout << "| " 
+                  << setw(14) << left << x.first << " | "
+                  << setw(6) << x.second.first << " | "
+                  << setw(7) << x.second.second << " |\n";
+    }
+
+    cout << "+----------------+--------+---------+\n\n";
+
+    // Imprimindo a tabela de definições
+    cout << "+----------------+--------+\n";
+    cout << "| Definição      | Valor  |\n";
+    cout << "+----------------+--------+\n";
+
+    for (const auto& x : tabelaDefinicoes) {
+        cout << "| "
+                  << setw(14) << left << x.first << " | "
+                  << setw(6) << x.second << " |\n";
+    }
+
+    cout << "+----------------+--------+\n";
+    cout << '\n';
+}
 
 // Funções auxiliares
 bool BothAreSpaces(char lhs, char rhs) {
@@ -149,7 +183,9 @@ void PreProcessamento(int argc, char *argv[]) {
         section_data.pop_back();
     }
 
-    cout << section_text << section_data;
+    if (PRINT_DEBUG) {
+      cout << section_text << section_data;
+    }
 
     string nomeArquivo = "myfile.pre";
     ofstream file(nomeArquivo);
@@ -157,7 +193,7 @@ void PreProcessamento(int argc, char *argv[]) {
     if (file.is_open()) {
         file << section_text << section_data;
         file.close();
-        cout << "\nArquivo " << nomeArquivo << " criado com sucesso!" << endl;
+        cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
     } else {
         cerr << "\nErro ao abrir o arquivo!" << endl;
     }
@@ -206,7 +242,10 @@ void PrimeiraPassagem(int argc, char *argv[]) {
             continue;
         }
 
-        cout << "Contador de posição: " << contador_posicao << " Instrução: " << line << endl;
+        if (PRINT_DEBUG) {
+            cout << "Contador de linha: " << contador_linha << " Instrução: " << line << endl;
+        }
+
         // Separa os elementos da linha: rótulo, operação, operandos
         string rotulo;
         string operacao;
@@ -303,15 +342,9 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 
     // Imprime a tabela de símbolos
     // Iterar e imprimir os elementos do map
-    for (auto const& x : tabelaSimbolos) {
-        cout << "Rótulo: " << x.first << ", Pos: " << x.second.first << ", Externo: " << x.second.second << endl;
+    if (PRINT_DEBUG) {
+        printTable(tabelaSimbolos, tabelaDefinicoes); 
     }
-
-    cout << "\n\n";
-
-    for (auto const& x : tabelaDefinicoes) {
-        cout << x.first << " " << x.second << endl;
-    } 
 }
 
 
@@ -429,28 +462,34 @@ void SegundaPassagem(){
           }
         }
       }
+      else if (operacao == "BEGIN" || operacao == "END" || operacao == "EXTERN" || operacao == "PUBLIC"){
+        continue;
+      }
       // Se não achou na Tabela de Diretivas:
-      else{
+      else {
         cerr << "ERRO: Operacao Nao Identificada" << endl;
       }
     }
     contador_linha = contador_linha + 1;
   }
-  cout << codigo_objeto << endl;
   if(codigo_objeto.back() == ' '){
     codigo_objeto.pop_back();
   }
-  cout << codigo_objeto << endl;
+
+  if (PRINT_DEBUG) {
+    cout << codigo_objeto << endl;
+  }
+
   string nomeArquivo = "myfile.obj";
   ofstream file(nomeArquivo);
 
   if(file.is_open()){
     file << codigo_objeto;
     file.close();
-    cout << "\nArquivo " << nomeArquivo << " criado com sucesso!" << endl;
+    cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
   }
   else {
-    cerr << "\nErro ao abrir o arquivo!" << endl;
+    cerr << "Erro ao abrir o arquivo!" << endl;
   }
 }
 
