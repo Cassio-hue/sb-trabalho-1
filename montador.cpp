@@ -423,7 +423,9 @@ void SegundaPassagem(){
             codigo_objeto = codigo_objeto + "00" + " ";
           }
           else if(operando1 != ""){
-            codigo_objeto = codigo_objeto + "00 " + operando1 + " ";
+            for(int i = 0; i < stoi(operando1); i++){
+              codigo_objeto = codigo_objeto + "00 ";
+            }
           }
         }
       }
@@ -434,6 +436,11 @@ void SegundaPassagem(){
     }
     contador_linha = contador_linha + 1;
   }
+  cout << codigo_objeto << endl;
+  if(codigo_objeto.back() == ' '){
+    codigo_objeto.pop_back();
+  }
+  cout << codigo_objeto << endl;
   string nomeArquivo = "myfile.obj";
   ofstream file(nomeArquivo);
 
