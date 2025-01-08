@@ -1,0 +1,37 @@
+TAREFAS
+- Tabela de Definições, Tabela de Uso, Tabela de Símbolos e Código Objeto.
+
+MACROS 
+- MDT e MNT.
+- Receber até 4 parâmetros.
+- Uma pode chamar outra.
+- Definidas dentro da seção de TEXT.
+
+ERROS
+- Montado sempre o programa inteiro.
+- Identificar erros durante a montagem. 
+- Mostrar na tela as LINHAS com relação ao programa original.
+- Mostrar na tela os TIPO DOS ERROS encontrados (léxico, sintático, semântico).
+	- declarações e rótulos ausentes;
+	- declarações e rótulos repetidos ou dobrado na mesma linha;
+	- rótulo redefinido
+	- pulo para rótulos inválidos;
+	- pulo para seção errada;
+	- diretivas invalidas;
+	- instruções invalidas;
+	- diretivas ou instruções na seção errada;
+	- divisão por zero (para constante);
+	- instruções com a quantidade de operando invalida;
+	- tokens inválidos;
+	- dois rótulos na mesma linha;
+	- seção TEXT faltante;
+	- seção DATA faltante;
+	- seção invalida;
+	- tipo de argumento invalido;
+	- modificação de um valor constante;
+	- números inválidos
+
+LIGADOR
+- copy.asm
+- Tabela de Definições Global.
+- Tabela de Relativo/Absoluto.
