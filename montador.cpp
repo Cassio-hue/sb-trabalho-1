@@ -8,7 +8,9 @@
 #include <iomanip>
 
 using namespace std;
-bool PRINT_DEBUG = true;
+bool PRINT_DEBUG = false;
+bool PRINT_FILE_STATUS = false;
+
 void printTable(
     const map<string, pair<int, char>>& tabelaSimbolos = {}, 
     const map<string, int>& tabelaDefinicoes = {}, 
@@ -170,6 +172,7 @@ void PreProcessamento(int argc, char *argv[]) {
 
     if (!inputFile.is_open()) {
         cerr << "Erro ao abrir arquivos" << endl;
+        return;
     }
 
     int aux = 0;
@@ -245,7 +248,7 @@ void PreProcessamento(int argc, char *argv[]) {
     if (file.is_open()) {
         file << section_text << section_data;
         file.close();
-        cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+        if (PRINT_FILE_STATUS) cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
     } else {
         cerr << "\nErro ao abrir o arquivo!" << endl;
     }
@@ -538,11 +541,9 @@ void SegundaPassagem(char *argv[]){
         codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
         // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução:
         if(operando1 != ""){
-          cout << "OPERANDO1 = " << operando1 << " OPERANDOPURO1 = " << operandoPuro1 << endl;
           codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro1].first + operandoPuro1Valor) + " ";
         }
         if(operando2 != ""){
-          cout << "OPERANDO2 = " << operando2 << " OPERANDOPURO2 = " << operandoPuro2 << endl;
           codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro2].first + operandoPuro2Valor) + " ";
         }
       }
@@ -598,7 +599,8 @@ void SegundaPassagem(char *argv[]){
   if(file.is_open()){
     file << codigo_objeto;
     file.close();
-    cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+
+    if (PRINT_FILE_STATUS) cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
   }
   else {
     cerr << "Erro ao abrir o arquivo!" << endl;
