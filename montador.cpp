@@ -14,16 +14,16 @@ bool PRINT_FILE_STATUS = true;
 void printTable(
     const map<string, pair<int, char>>& tabelaSimbolos = {}, 
     const map<string, int>& tabelaDefinicoes = {}, 
-    const map<string, string>& macroMap = {}) {
+    const map<string, string>& macroMap = {},
+    const vector<pair<string, int>>& tabelaUso = {}
+    ) {
     // Imprimindo a tabela de símbolos
     if (!tabelaSimbolos.empty()) {
     cout << '\n';
-    cout << '\n';
 
-        cout << '\n';
-
+        cout << "Tabela de Simbolos" << endl;
         cout << "+----------------+--------+---------+\n";
-        cout << "| Símbolo        | Pos    | Externo |\n";
+        cout << "| Sim            | vlr    | externo |\n";
         cout << "+----------------+--------+---------+\n";
 
         for (const auto& x : tabelaSimbolos) {
@@ -38,8 +38,10 @@ void printTable(
 
     // Imprimindo a tabela de definições
     if (!tabelaDefinicoes.empty()) {
+
+        cout << "Tabela de Definicoes" << endl;
         cout << "+----------------+--------+\n";
-        cout << "| Definição      | Valor  |\n";
+        cout << "| Sim            | vlr    |\n";
         cout << "+----------------+--------+\n";
 
         for (const auto& x : tabelaDefinicoes) {
@@ -80,6 +82,20 @@ void printTable(
     }
     cout << "+----------------+-------------------------------+\n\n";
     }
+
+    // Imprimindo a tabela de uso
+    if(!tabelaUso.empty()){
+      cout << "Tabela de Uso" << endl;
+      cout << "+----------------+----------+\n";
+      cout << "| Sim            | endereco |\n";
+      cout << "+----------------+----------+\n";
+      for (const auto& item : tabelaUso) {
+        cout << "| " << setw(14) << left << item.first << " | "
+             << setw(8) << item.second << " |\n";
+      }
+      cout << "+----------------+----------+\n";
+    }
+    cout << endl;
 }
 
 // Funções auxiliares
@@ -251,7 +267,7 @@ void PreProcessamento(int argc, char *argv[]) {
 
     if (PRINT_DEBUG) {
       cout << section_text << section_data << endl;
-      printTable({}, {}, macroMap);
+      printTable({}, {}, macroMap, {});
     }
 
     string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
@@ -288,7 +304,7 @@ map<string, int> tabelaDiretivas = {
 
 map<string, pair<int, char>> tabelaSimbolos;
 map<string, int> tabelaDefinicoes;
-map<string, int> tabelaUso;
+vector<pair<string, int>> tabelaUso;
 
 void PrimeiraPassagem(int argc, char *argv[]) {
     string arquivo = argv[1];
@@ -311,7 +327,7 @@ void PrimeiraPassagem(int argc, char *argv[]) {
         }
 
         if (PRINT_DEBUG) {
-            cout << "Contador de linha: " << contador_linha << " Instrução: " << line << endl;
+            cout << "Contador de linha: " << contador_linha << " Instrucao: " << line << endl;
         }
 
         // Separa os elementos da linha: rótulo, operação, operandos
@@ -429,10 +445,14 @@ void PrimeiraPassagem(int argc, char *argv[]) {
       contador_linha++;
     }
 
+    for (const auto& x : tabelaDefinicoes) {
+      tabelaDefinicoes[x.first] = tabelaSimbolos[x.first].first;
+    }
+
     // Imprime a tabela de símbolos
     // Iterar e imprimir os elementos do map
     if (PRINT_DEBUG) {
-        printTable(tabelaSimbolos, tabelaDefinicoes, macroMap); 
+        printTable(tabelaSimbolos, tabelaDefinicoes, macroMap, {}); 
     }
 }
 
@@ -518,12 +538,20 @@ void SegundaPassagem(char *argv[]){
             vector<string> split_operando = split(operando1, "+");
             operandoPuro1 = split_operando[0];
             operandoPuro1Valor = stoi(split_operando[1]);
+            if(tabelaSimbolos[operandoPuro1].second == 'S'){
+              int endereco = contador_posicao + 1;
+              tabelaUso.push_back(make_pair(operandoPuro1, endereco));
+            }
             if(tabelaSimbolos.find(operandoPuro1) == tabelaSimbolos.end()){
               cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
             }
           } 
           else {
             operandoPuro1 = operando1;
+            if(tabelaSimbolos[operando1].second == 'S'){
+              int endereco = contador_posicao + 1;
+              tabelaUso.push_back(make_pair(operando1, endereco));
+            }
             if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
               cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
             }
@@ -534,12 +562,20 @@ void SegundaPassagem(char *argv[]){
             vector<string> split_operando = split(operando2, "+");
             operandoPuro2 = split_operando[0];
             operandoPuro2Valor = stoi(split_operando[1]);
+            if(tabelaSimbolos[operandoPuro2].second == 'S'){
+              int endereco = contador_posicao + 1;
+              tabelaUso.push_back(make_pair(operandoPuro2, endereco));
+            }
             if (tabelaSimbolos.find(operandoPuro2) == tabelaSimbolos.end()){
               cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
             }
           } 
           else {
             operandoPuro2 = operando2;
+            if(tabelaSimbolos[operando2].second == 'S'){
+              int endereco = contador_posicao + 2;
+              tabelaUso.push_back(make_pair(operando2, endereco));
+            }
             if (tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
               cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
             }
@@ -600,9 +636,15 @@ void SegundaPassagem(char *argv[]){
   if(codigo_objeto.back() == ' '){
     codigo_objeto.pop_back();
   }
+  if(codigo_objeto.front() == ' '){
+    codigo_objeto.erase(0, 1);
+  }
 
   if (PRINT_DEBUG) {
+    printTable({}, {}, {}, tabelaUso);
+    cout << "Codigo Objeto" << endl;
     cout << codigo_objeto << endl;
+    cout << endl;
   }
 
   nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".obj";
@@ -612,7 +654,9 @@ void SegundaPassagem(char *argv[]){
     file << codigo_objeto;
     file.close();
 
-    if (PRINT_FILE_STATUS) cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+    if (PRINT_FILE_STATUS){
+      cout << "Arquivo " << nomeArquivo << " criado com sucesso!" << endl;
+    }
   }
   else {
     cerr << "Erro ao abrir o arquivo!" << endl;

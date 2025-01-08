@@ -1,6 +1,3 @@
-TAREFAS
-- Tabela de Definições, Tabela de Uso, Tabela de Símbolos e Código Objeto.
-
 MACROS 
 - MDT e MNT.
 - Receber até 4 parâmetros.
@@ -29,9 +26,10 @@ ERROS
 	- seção invalida;
 	- tipo de argumento invalido;
 	- modificação de um valor constante;
-	- números inválidos
+	- números inválidos;
 
 LIGADOR
 - copy.asm
+- modA.asm + modB.asm
 - Tabela de Definições Global.
 - Tabela de Relativo/Absoluto.
