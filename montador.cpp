@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <regex>
@@ -8,37 +9,75 @@
 
 using namespace std;
 bool PRINT_DEBUG = true;
-void printTable(const map<string, pair<int, char>>& tabelaSimbolos, 
-                const map<string, int>& tabelaDefinicoes) {
+void printTable(
+    const map<string, pair<int, char>>& tabelaSimbolos = {}, 
+    const map<string, int>& tabelaDefinicoes = {}, 
+    const map<string, string>& macroMap = {}) {
     // Imprimindo a tabela de símbolos
+    if (!tabelaSimbolos.empty()) {
+    cout << '\n';
     cout << '\n';
 
-    cout << "+----------------+--------+---------+\n";
-    cout << "| Rótulo         | Pos    | Externo |\n";
-    cout << "+----------------+--------+---------+\n";
+        cout << '\n';
 
-    for (const auto& x : tabelaSimbolos) {
-        cout << "| " 
-                  << setw(14) << left << x.first << " | "
-                  << setw(6) << x.second.first << " | "
-                  << setw(7) << x.second.second << " |\n";
+        cout << "+----------------+--------+---------+\n";
+        cout << "| Símbolo        | Pos    | Externo |\n";
+        cout << "+----------------+--------+---------+\n";
+
+        for (const auto& x : tabelaSimbolos) {
+            cout << "| " 
+                      << setw(14) << left << x.first << " | "
+                      << setw(6) << x.second.first << " | "
+                      << setw(7) << x.second.second << " |\n";
+        }
+
+        cout << "+----------------+--------+---------+\n\n";
     }
-
-    cout << "+----------------+--------+---------+\n\n";
 
     // Imprimindo a tabela de definições
-    cout << "+----------------+--------+\n";
-    cout << "| Definição      | Valor  |\n";
-    cout << "+----------------+--------+\n";
+    if (!tabelaDefinicoes.empty()) {
+        cout << "+----------------+--------+\n";
+        cout << "| Definição      | Valor  |\n";
+        cout << "+----------------+--------+\n";
 
-    for (const auto& x : tabelaDefinicoes) {
-        cout << "| "
-                  << setw(14) << left << x.first << " | "
-                  << setw(6) << x.second << " |\n";
+        for (const auto& x : tabelaDefinicoes) {
+            cout << "| "
+                      << setw(14) << left << x.first << " | "
+                      << setw(6) << x.second << " |\n";
+        }
+
+        cout << "+----------------+--------+\n\n";
     }
 
-    cout << "+----------------+--------+\n";
-    cout << '\n';
+    // Imprimindo a tabela de macros
+    if (!macroMap.empty()) {
+      cout << "+----------------+-------------------------------+\n";
+      cout << "| Macro          | Valor                         |\n";
+      cout << "+----------------+-------------------------------+\n";
+
+      for (const auto& x : macroMap) {
+        string macroName = x.first;
+        string macroValue = x.second;
+
+        stringstream ss(macroValue);
+        string line;
+        bool isFirstLine = true;
+
+        while (getline(ss, line)) {
+            if (isFirstLine) {
+                // Primeira linha: imprime o macroName
+                cout << "| " << setw(14) << left << macroName << " | "
+                     << setw(30) << left << line << " |\n";
+                isFirstLine = false;
+            } else {
+                // Linhas subsequentes: deixa a coluna Macro vazia
+                cout << "| " << setw(14) << " " << " | "
+                     << setw(30) << left << line << " |\n";
+            }
+        }
+    }
+    cout << "+----------------+-------------------------------+\n\n";
+    }
 }
 
 // Funções auxiliares
@@ -82,17 +121,29 @@ string trim(string &str) {
 
 string superTrim(string &str) {
     string result = str;
-    size_t pos = result.find(',');
+    size_t virgula = result.find(',');
+    size_t mais = result.find('+');
 
-    if (pos != string::npos) {
-        string before = result.substr(0, pos);
-        string after = result.substr(pos + 1);
+    if(mais != string::npos) {
+      string before = result.substr(0, mais);
+      string after = result.substr(mais + 1);
+
+      before = trim(before);
+      after = trim(after);
+
+      result = before + "+" + after;
+    }
+
+    if (virgula != string::npos) {
+        string before = result.substr(0, virgula);
+        string after = result.substr(virgula + 1);
 
         before = trim(before);
         after = trim(after);
 
         result = before + "," + after;
     }
+    
     return trim(result);
 }
 
@@ -176,7 +227,7 @@ void PreProcessamento(int argc, char *argv[]) {
             macroMap[macro_flag] += v[0] + "\n";
         }
     }
-
+    
     inputFile.close();
 
     if (section_data.back() == '\n') {
@@ -185,6 +236,7 @@ void PreProcessamento(int argc, char *argv[]) {
 
     if (PRINT_DEBUG) {
       cout << section_text << section_data << endl;
+      printTable({}, {}, macroMap);
     }
 
     string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
@@ -216,11 +268,12 @@ map<string, OpcodeInfo> tabelaInstrucoes = {
     };
 
 map<string, int> tabelaDiretivas = {
-    {"SPACE", 0}, {"CONST", 0}, {"BEGIN", 0}, {"END", 0}  
+    {"SECTION", 1}, {"SPACE", 0}, {"CONST", 0}, {"MACRO", 0}, {"ENDMACRO", 0}, {"BEGIN", 0}, {"END", 0}  
 };
 
 map<string, pair<int, char>> tabelaSimbolos;
-map<string, int>tabelaDefinicoes;
+map<string, int> tabelaDefinicoes;
+map<string, int> tabelaUso;
 
 void PrimeiraPassagem(int argc, char *argv[]) {
     string arquivo = argv[1];
@@ -319,11 +372,11 @@ void PrimeiraPassagem(int argc, char *argv[]) {
               continue;
             }
 
-            if (regex_search(operacao, regex_begin)) {
-              tabelaSimbolos[rotulo] = { 0, 'N' };
-              tabelaDefinicoes[rotulo] = 0;
-              continue;
-            }
+            // if (regex_search(operacao, regex_begin)) {
+            //   tabelaSimbolos[rotulo] = { 0, 'N' };
+            //   tabelaDefinicoes[rotulo] = 0;
+            //   continue;
+            // }
 
             tabelaSimbolos[rotulo] = {contador_posicao, 'N'};
           }
@@ -364,7 +417,7 @@ void PrimeiraPassagem(int argc, char *argv[]) {
     // Imprime a tabela de símbolos
     // Iterar e imprimir os elementos do map
     if (PRINT_DEBUG) {
-        printTable(tabelaSimbolos, tabelaDefinicoes); 
+        printTable(tabelaSimbolos, tabelaDefinicoes, macroMap); 
     }
 }
 
@@ -401,6 +454,10 @@ void SegundaPassagem(char *argv[]){
       string operacao;
       string operando1;
       string operando2;
+      string operandoPuro1;
+      string operandoPuro2;
+      int operandoPuro1Valor = 0;
+      int operandoPuro2Valor = 0;
 
       if(instrucao[0].back() == ':'){
         rotulo = instrucao[0];
@@ -440,19 +497,37 @@ void SegundaPassagem(char *argv[]){
           }
         }
       }
-      // Para cada operando que é símbolo, procura operando na Tabela de Símbolos
       if(operacao != "CONST" && operacao != "SPACE"){
         if(operando1 != ""){
-          // Se não achou:
-          if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
-            cerr << "ERRO: Simbolo Indefinido" << endl;
+          if (operando1.find("+") != string::npos) {
+            vector<string> split_operando = split(operando1, "+");
+            operandoPuro1 = split_operando[0];
+            operandoPuro1Valor = stoi(split_operando[1]);
+            if(tabelaSimbolos.find(operandoPuro1) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            }
+          } 
+          else {
+            operandoPuro1 = operando1;
+            if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            }
           }
         }
-        // Para cada operando que é símbolo, procura operando na Tabela de Símbolos
-        if(operando2 != ""){
-          // Se não achou:
-          if(tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
-            cerr << "ERRO: Simbolo Indefinido" << endl;
+        if(operando2 != "") {
+          if (operando2.find("+") != string::npos) {
+            vector<string> split_operando = split(operando2, "+");
+            operandoPuro2 = split_operando[0];
+            operandoPuro2Valor = stoi(split_operando[1]);
+            if (tabelaSimbolos.find(operandoPuro2) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            }
+          } 
+          else {
+            operandoPuro2 = operando2;
+            if (tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            }
           }
         }
       }
@@ -463,10 +538,12 @@ void SegundaPassagem(char *argv[]){
         codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
         // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução:
         if(operando1 != ""){
-          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operando1].first) + " ";
+          cout << "OPERANDO1 = " << operando1 << " OPERANDOPURO1 = " << operandoPuro1 << endl;
+          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro1].first + operandoPuro1Valor) + " ";
         }
         if(operando2 != ""){
-          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operando2].first) + " ";
+          cout << "OPERANDO2 = " << operando2 << " OPERANDOPURO2 = " << operandoPuro2 << endl;
+          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro2].first + operandoPuro2Valor) + " ";
         }
       }
       // Se não achou na Tabela de Instruções:
