@@ -91,7 +91,7 @@ string superTrim(string &str) {
         before = trim(before);
         after = trim(after);
 
-        result = before + ", " + after;
+        result = before + "," + after;
     }
     return trim(result);
 }
@@ -184,10 +184,10 @@ void PreProcessamento(int argc, char *argv[]) {
     }
 
     if (PRINT_DEBUG) {
-      cout << section_text << section_data;
+      cout << section_text << section_data << endl;
     }
 
-    string nomeArquivo = "myfile.pre";
+    string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
     ofstream file(nomeArquivo);
 
     if (file.is_open()) {
@@ -257,6 +257,27 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           vector<string> instrucao = split(superTrim(separacao_instrucao[1]), " ");
           
           rotulo = separacao_instrucao[0];
+
+          // Veririca se o rótulo não é vazio ou composto por espaços em branco.
+          if (rotulo.empty()) {
+            cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
+            return;
+          }
+
+          // Verifica se o primeiro caractere é uma letra ou underscore.
+          if (!isalpha(rotulo[0]) && rotulo[0] != '_') {
+            cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
+            return;
+          }
+
+          // Procura se existe algum caractere que não seja letra, numero ou underscore.
+          for (int i = 1; i < rotulo.size(); i++) {
+            if (!isalnum(rotulo[i]) && rotulo[i] != '_') {
+              cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
+              return;
+            }
+          }
+
           operacao = split(superTrim(separacao_instrucao[1]), " ")[0];
 
           // Procura rótulo na Tabela de Símbolos
@@ -348,7 +369,9 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 }
 
 
-void SegundaPassagem(){ 
+void SegundaPassagem(char *argv[]){ 
+  string arquivo = argv[1];
+  string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
 
   int contador_posicao = 0;
   int contador_linha = 1;
@@ -356,7 +379,7 @@ void SegundaPassagem(){
   string codigo_objeto = "";
   string line;
 
-  ifstream inputFile("myfile.pre");
+  ifstream inputFile(nomeArquivo);
 
   if(!inputFile.is_open()){
     cerr << "Erro ao abrir arquivo de pre-processamento" << endl;
@@ -387,13 +410,15 @@ void SegundaPassagem(){
           operando2 = "";
         }
         else if(instrucao.size() == 3){
-          operando1 = instrucao[2];
-          operando2 = "";
-        }
-        else if(instrucao.size() == 4){
-          operando1 = instrucao[2];
-          operando1.pop_back();
-          operando2 = instrucao[3];
+          if(operacao == "COPY"){
+            vector<string> operandos = split(instrucao[2], ",");
+            operando1 = operandos[0];
+            operando2 = operandos[1];
+          }
+          else{
+            operando1 = instrucao[2];
+            operando2 = "";
+          }	
         }
       }
       else{
@@ -404,13 +429,15 @@ void SegundaPassagem(){
           operando2 = "";
         }
         else if(instrucao.size() == 2){
-          operando1 = instrucao[1];
-          operando2 = "";
-        }
-        else if(instrucao.size() == 3){
-          operando1 = instrucao[1];
-          operando1.pop_back();
-          operando2 = instrucao[2];
+          if(operacao == "COPY"){
+            vector<string> operandos = split(instrucao[1], ",");
+            operando1 = operandos[0];
+            operando2 = operandos[1];
+          }
+          else{
+            operando1 = instrucao[1];
+            operando2 = "";
+          }
         }
       }
       // Para cada operando que é símbolo, procura operando na Tabela de Símbolos
@@ -449,13 +476,21 @@ void SegundaPassagem(){
         // Chama subrotina que executa a diretiva
         // contador_posicao = valor retornado pela subrotina;
         if(operacao == "CONST"){
-          codigo_objeto = codigo_objeto + operando1 + " ";
+          regex hex_regex("^-?0X[0-9A-Fa-f]+$");
+          int num;
+          if (regex_match(operando1, hex_regex)) {
+            num = stoi(operando1, nullptr, 16); 
+          } 
+          else {
+            num = stoi(operando1);
+          }
+          codigo_objeto = codigo_objeto + to_string(num) + " ";
         }
-        else if(operacao == "SPACE"){
-          if(operando1 == ""){
+        else if(operacao == "SPACE") {
+          if(operando1 == "") {
             codigo_objeto = codigo_objeto + "00" + " ";
           }
-          else if(operando1 != ""){
+          else if(operando1 != "") {
             for(int i = 0; i < stoi(operando1); i++){
               codigo_objeto = codigo_objeto + "00 ";
             }
@@ -480,7 +515,7 @@ void SegundaPassagem(){
     cout << codigo_objeto << endl;
   }
 
-  string nomeArquivo = "myfile.obj";
+  nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".obj";
   ofstream file(nomeArquivo);
 
   if(file.is_open()){
@@ -514,7 +549,7 @@ int main(int argc, char *argv[]) {
 
   if (regex_match(argv[1], regex_pre_file)) {
     PrimeiraPassagem(argc, argv);
-    SegundaPassagem();
+    SegundaPassagem(argv);
   }
 
 

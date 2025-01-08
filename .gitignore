@@ -1,5 +1,4 @@
 montador
 montador.exe
-myfile.pre
-myfile.obj
+*.pre
 .vscode
