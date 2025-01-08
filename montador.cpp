@@ -8,8 +8,8 @@
 #include <iomanip>
 
 using namespace std;
-bool PRINT_DEBUG = false;
-bool PRINT_FILE_STATUS = false;
+bool PRINT_DEBUG = true;
+bool PRINT_FILE_STATUS = true;
 
 void printTable(
     const map<string, pair<int, char>>& tabelaSimbolos = {}, 
@@ -227,6 +227,18 @@ void PreProcessamento(int argc, char *argv[]) {
             if (aux == 1) section_data += superTrim(v[0]) + "\n";
 
         } else {
+            if (v[0].back() == '\n') {
+                v[0].pop_back();
+            }
+            
+            if (macroMap.find(v[0]) != macroMap.end()) {
+              v[0] = macroMap[v[0]];
+            };
+
+            if (v[0].back() == '\n') {
+                v[0].pop_back();
+            }
+            
             macroMap[macro_flag] += v[0] + "\n";
         }
     }
