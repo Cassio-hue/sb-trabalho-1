@@ -457,7 +457,8 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 }
 
 
-void SegundaPassagem(char *argv[]){ 
+void SegundaPassagem(char *argv[]){
+  bool ligacao = false;
   string arquivo = argv[1];
   string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
 
@@ -624,6 +625,7 @@ void SegundaPassagem(char *argv[]){
         }
       }
       else if (operacao == "BEGIN" || operacao == "END" || operacao == "EXTERN" || operacao == "PUBLIC"){
+        ligacao = true;
         continue;
       }
       // Se não achou na Tabela de Diretivas:
@@ -651,6 +653,16 @@ void SegundaPassagem(char *argv[]){
   ofstream file(nomeArquivo);
 
   if(file.is_open()){
+
+    if(ligacao){
+      for (const auto& x : tabelaDefinicoes){
+        file << "D, " << x.first << " " << x.second << endl;
+      }
+      for (const auto& x : tabelaUso){
+        file << "U, " << x.first << " " << x.second << endl;
+      }
+    }
+
     file << codigo_objeto;
     file.close();
 

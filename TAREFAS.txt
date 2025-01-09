@@ -1,3 +1,13 @@
+LIGADOR
+- A saída deve ser um arquivo chamado "prog1.e" sendo um arquivo de texto de uma única linha igual ao arquivo ".obj" que não precisa ser ligado.
+- O arquivo ".obj" para ligar deve ter Tabela de Uso, Tabela de Definições e Informação de Realocação.
+- Tabela de Definições Global: Tabela contendo informações das diversas Tabelas de Definições.
+- Tabela de Relativo e Absoluto: 
+- Gerar saída mesmo com erro.
+- Ligação apenas em caso de ter achado diretivas BEGIN e END.
+- copy.asm
+- modA.asm + modB.asm
+
 MACROS 
 - MDT e MNT.
 - Receber até 4 parâmetros.
@@ -27,9 +37,3 @@ ERROS
 	- tipo de argumento invalido;
 	- modificação de um valor constante;
 	- números inválidos;
-
-LIGADOR
-- copy.asm
-- modA.asm + modB.asm
-- Tabela de Definições Global.
-- Tabela de Relativo/Absoluto.
