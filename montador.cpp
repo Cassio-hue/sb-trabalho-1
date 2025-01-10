@@ -305,6 +305,7 @@ map<string, int> tabelaDiretivas = {
 map<string, pair<int, char>> tabelaSimbolos;
 map<string, int> tabelaDefinicoes;
 vector<pair<string, int>> tabelaUso;
+string informacaoRealocacao;
 
 void PrimeiraPassagem(int argc, char *argv[]) {
     string arquivo = argv[1];
@@ -588,12 +589,41 @@ void SegundaPassagem(char *argv[]){
       if(tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()){
         contador_posicao = contador_posicao + tabelaInstrucoes[operacao].tamanho;
         codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
+        if(operacao != "BEGIN"){
+          informacaoRealocacao+="0 ";
+        }
         // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução:
         if(operando1 != ""){
           codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro1].first + operandoPuro1Valor) + " ";
+          if(tabelaDefinicoes.find(operandoPuro1) != tabelaDefinicoes.end()){
+            informacaoRealocacao+="1 ";
+          }
+          else{
+            if(tabelaSimbolos.find(operandoPuro1) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operandoPuro1].second == 'N'){
+                informacaoRealocacao+="1 ";
+              }
+              else{
+                informacaoRealocacao+="0 ";
+              }
+            }
+          }
         }
         if(operando2 != ""){
           codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro2].first + operandoPuro2Valor) + " ";
+          if(tabelaDefinicoes.find(operandoPuro2) != tabelaDefinicoes.end()){
+            informacaoRealocacao+="1 ";
+          }
+          else{
+            if(tabelaSimbolos.find(operandoPuro2) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operandoPuro2].second == 'N'){
+                informacaoRealocacao+="1 ";
+              }
+              else{
+                informacaoRealocacao+="0 ";
+              }
+            }
+          }
         }
       }
       // Se não achou na Tabela de Instruções:
@@ -603,6 +633,7 @@ void SegundaPassagem(char *argv[]){
         // Chama subrotina que executa a diretiva
         // contador_posicao = valor retornado pela subrotina;
         if(operacao == "CONST"){
+          informacaoRealocacao+="0 ";
           regex hex_regex("^-?0X[0-9A-Fa-f]+$");
           int num;
           if (regex_match(operando1, hex_regex)) {
@@ -620,6 +651,7 @@ void SegundaPassagem(char *argv[]){
           else if(operando1 != "") {
             for(int i = 0; i < stoi(operando1); i++){
               codigo_objeto = codigo_objeto + "00 ";
+              informacaoRealocacao+="0 ";
             }
           }
         }
@@ -655,12 +687,21 @@ void SegundaPassagem(char *argv[]){
   if(file.is_open()){
 
     if(ligacao){
+      // Imprimindoa tabela de relativos e absolutos;
+      if (!informacaoRealocacao.empty()) {
+        cout << "Tabela de Relativos e Absolutos" << endl;
+        for(int i = 0; i < informacaoRealocacao.size(); i++){
+          cout << informacaoRealocacao[i];
+        }
+        cout << endl;
+      }
       for (const auto& x : tabelaDefinicoes){
         file << "D, " << x.first << " " << x.second << endl;
       }
       for (const auto& x : tabelaUso){
         file << "U, " << x.first << " " << x.second << endl;
       }
+      file << "R, " << informacaoRealocacao << endl;
     }
 
     file << codigo_objeto;

@@ -1,10 +1,4 @@
 LIGADOR
-- A saída deve ser um arquivo chamado "prog1.e" sendo um arquivo de texto de uma única linha igual ao arquivo ".obj" que não precisa ser ligado.
-- O arquivo ".obj" para ligar deve ter Tabela de Uso, Tabela de Definições e Informação de Realocação.
-- Tabela de Definições Global: Tabela contendo informações das diversas Tabelas de Definições.
-- Tabela de Relativo e Absoluto: 
-- Gerar saída mesmo com erro.
-- Ligação apenas em caso de ter achado diretivas BEGIN e END.
 - copy.asm
 - modA.asm + modB.asm
 
@@ -15,6 +9,7 @@ MACROS
 - Definidas dentro da seção de TEXT.
 
 ERROS
+- Gerar saída mesmo com erro.
 - Montado sempre o programa inteiro.
 - Identificar erros durante a montagem. 
 - Mostrar na tela as LINHAS com relação ao programa original.
@@ -37,3 +32,6 @@ ERROS
 	- tipo de argumento invalido;
 	- modificação de um valor constante;
 	- números inválidos;
+
+12 9 12 10 05 11 13 24 14 00 00 10 9 03 10 11 23 04 25 11 24 05 6 00 00 2
+12 9 12 10 05 11 13 24 14 00 00 10 9 03 10 11 23 04 25 11 24 05 6 00 00 2
