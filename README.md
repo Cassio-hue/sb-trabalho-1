@@ -15,12 +15,13 @@ foo@bar:~$ g++ -o ligador ligador.cpp
 ```console
 foo@bar:~$ ./montador file.asm
 ```
+O arquivo de pre-processamento é gerado com o mesmo nome do arquivo ```.asm``` utilizado.
 
 # Montagem do arquivo .pre
 ```console
 foo@bar:~$ ./montador file.pre
 ```
-O arquivo de pre-processamento é gerado com o mesmo nome do arquivo ```.asm``` utilizado.
+Ao término da montagem é gerado um arquivo ```file.obj```
 
 # Ligação dos arquivos
 ```console
