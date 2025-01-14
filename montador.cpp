@@ -14,8 +14,9 @@ bool PRINT_FILE_STATUS = true;
 void printTable(
     const map<string, pair<int, char>>& tabelaSimbolos = {}, 
     const map<string, int>& tabelaDefinicoes = {}, 
-    const map<string, string>& macroMap = {},
-    const vector<pair<string, int>>& tabelaUso = {}
+    const map<string, string>& macroMDT = {},
+    const vector<pair<string, int>>& tabelaUso = {},
+    const map<string, string>& macroMNT = {}
     ) {
     // Imprimindo a tabela de símbolos
     if (!tabelaSimbolos.empty()) {
@@ -54,12 +55,12 @@ void printTable(
     }
 
     // Imprimindo a tabela de macros
-    if (!macroMap.empty()) {
+    if (!macroMDT.empty()) {
       cout << "+----------------+-------------------------------+\n";
-      cout << "| Macro          | Valor                         |\n";
+      cout << "| MDT            | Valor                         |\n";
       cout << "+----------------+-------------------------------+\n";
 
-      for (const auto& x : macroMap) {
+      for (const auto& x : macroMDT) {
         string macroName = x.first;
         string macroValue = x.second;
 
@@ -79,6 +80,33 @@ void printTable(
                      << setw(30) << left << line << " |\n";
             }
         }
+    }
+    cout << "+----------------+-------------------------------+\n\n";
+
+    cout << "+----------------+-------------------------------+\n";
+    cout << "| MNT            | Valor                         |\n";
+    cout << "+----------------+-------------------------------+\n";
+
+    for (const auto& x : macroMNT) {
+      string macroName = x.first;
+      string macroValue = x.second;
+
+      stringstream ss(macroValue);
+      string line;
+      bool isFirstLine = true;
+
+      while (getline(ss, line)) {
+          if (isFirstLine) {
+              // Primeira linha: imprime o macroName
+              cout << "| " << setw(14) << left << macroName << " | "
+                    << setw(30) << left << line << " |\n";
+              isFirstLine = false;
+          } else {
+              // Linhas subsequentes: deixa a coluna Macro vazia
+              cout << "| " << setw(14) << " " << " | "
+                    << setw(30) << left << line << " |\n";
+          }
+      }
     }
     cout << "+----------------+-------------------------------+\n\n";
     }
@@ -139,20 +167,22 @@ string trim(string &str) {
 
 string superTrim(string &str) {
     string result = str;
-    size_t virgula = result.find(',');
     size_t mais = result.find('+');
 
-    if(mais != string::npos) {
-      string before = result.substr(0, mais);
-      string after = result.substr(mais + 1);
+    // Remover espaços ao redor do operador '+'
+    if (mais != string::npos) {
+        string before = result.substr(0, mais);
+        string after = result.substr(mais + 1);
 
-      before = trim(before);
-      after = trim(after);
+        before = trim(before);
+        after = trim(after);
 
-      result = before + "+" + after;
+        result = before + "+" + after;
     }
 
-    if (virgula != string::npos) {
+    // Remover espaços ao redor de todas as vírgulas
+    size_t virgula = result.find(',');
+    while (virgula != string::npos) {
         string before = result.substr(0, virgula);
         string after = result.substr(virgula + 1);
 
@@ -160,10 +190,14 @@ string superTrim(string &str) {
         after = trim(after);
 
         result = before + "," + after;
+
+        // Continuar procurando vírgulas restantes
+        virgula = result.find(',', virgula + 1);
     }
-    
+
     return trim(result);
 }
+
 
 vector<string> split(string s, string delimiter) {
     size_t pos_start = 0, pos_end, delim_len = delimiter.length();
@@ -180,8 +214,15 @@ vector<string> split(string s, string delimiter) {
     return res;
 }
 
+string escape_regex(const string& input) {
+    static const regex special_chars(R"([-[\]{}()*+?.,\^$|#\s])");
+    return regex_replace(input, special_chars, R"(\$&)");
+}
+
 // Map das macros
-map<string, string> macroMap;
+map<string, string> macroMDT;
+map<string, string> macroMNT;
+
 void PreProcessamento(int argc, char *argv[]) {
     string arquivo = argv[1];
     ifstream inputFile(arquivo);
@@ -204,8 +245,14 @@ void PreProcessamento(int argc, char *argv[]) {
         regex find_macro("\\bMACRO\\b"), find_endmacro("\\bENDMACRO\\b");
 
         if (regex_search(v[0], find_macro)) {
-            macro_flag = split(v[0], ":")[0];
-            macroMap[macro_flag] = {""};
+            vector<string> macro_values = split(v[0], ":");
+            macro_flag = macro_values[0];
+            if (macro_values[1].find("&") != string::npos) {
+                macro_values = split(superTrim(macro_values[1]), " ");
+                macroMNT[macro_flag] = macro_values[1];
+            }
+
+            macroMDT[macro_flag] = {""};
             continue;
         }
 
@@ -220,14 +267,39 @@ void PreProcessamento(int argc, char *argv[]) {
 
             string modified = v[0];
             modified.erase(remove(modified.begin(), modified.end(), '\n'), modified.end());
-            modified.erase(remove(modified.begin(), modified.end(), ' '), modified.end());
+            // modified.erase(remove(modified.begin(), modified.end(), ' '), modified.end());
 
-            if (macroMap.find(modified) != macroMap.end()) {
-                if (macroMap[modified].back() == '\n') {
-                    macroMap[modified].pop_back();
+            // MACRO
+            vector<string> macro_values = split(modified, " ");
+            string macro_label = macro_values[0];
+            size_t pos = modified.find(' ');
+
+
+            if (macroMDT.find(macro_values[0]) != macroMDT.end()) {
+                if (macro_values.size() > 1 && macroMNT.find(macro_label) != macroMNT.end()) {
+                  vector<string>macro_params = split(macroMNT[macro_label], ",");
+                  string macro_body = macroMDT[macro_label];
+                  macro_values = split(modified.substr(pos + 1), ",");
+                  for (int i = 0; i < macro_params.size(); i++) {
+                      string param = escape_regex(macro_params[i]);
+                      string value = trim(macro_values[i]);
+                      
+
+                      if (value.back() == ',' || value.back() == ' ') {
+                          value.pop_back();
+                      }
+
+                      macro_body = regex_replace(macro_body, regex(param), value);
+                  }
+                  v[0] = macro_body;
+                } else {
+                  if (macroMDT[macro_label].back() == '\n') {
+                      macroMDT[macro_label].pop_back();
+                  }
+                  v[0] = macroMDT[macro_label];
                 }
-                v[0] = macroMap[modified];
             }
+            // FIM MACRO
 
             v[0] = removeSpaces(v[0]);
             v[0] = superTrim(v[0]);
@@ -246,16 +318,16 @@ void PreProcessamento(int argc, char *argv[]) {
             if (v[0].back() == '\n') {
                 v[0].pop_back();
             }
-            
-            if (macroMap.find(v[0]) != macroMap.end()) {
-              v[0] = macroMap[v[0]];
+
+            if (macroMDT.find(v[0]) != macroMDT.end()) {
+              v[0] = macroMDT[v[0]];
             };
 
             if (v[0].back() == '\n') {
                 v[0].pop_back();
             }
             
-            macroMap[macro_flag] += v[0] + "\n";
+            macroMDT[macro_flag] += v[0] + "\n";
         }
     }
     
@@ -267,7 +339,7 @@ void PreProcessamento(int argc, char *argv[]) {
 
     if (PRINT_DEBUG) {
       cout << section_text << section_data << endl;
-      printTable({}, {}, macroMap, {});
+      printTable({}, {}, macroMDT, {}, macroMNT);
     }
 
     string nomeArquivo = arquivo.substr(0, arquivo.find_last_of('.')) + ".pre";
@@ -453,7 +525,7 @@ void PrimeiraPassagem(int argc, char *argv[]) {
     // Imprime a tabela de símbolos
     // Iterar e imprimir os elementos do map
     if (PRINT_DEBUG) {
-        printTable(tabelaSimbolos, tabelaDefinicoes, macroMap, {}); 
+        printTable(tabelaSimbolos, tabelaDefinicoes, macroMDT, {}); 
     }
 }
 
