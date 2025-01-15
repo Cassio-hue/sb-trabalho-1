@@ -34,3 +34,6 @@ foo@bar:~$ .ligador file1.obj file2.obj
 
 # Versão G++
 - gcc version 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04) 
+
+# GitHub
+- https://github.com/Cassio-hue/sb-trabalho-1/tree/main
