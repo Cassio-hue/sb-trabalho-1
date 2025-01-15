@@ -1,3 +1,7 @@
+# Grupo
+Felipe Costa de Sousa - 211055236
+Cássio Vinicius Teixeira Borges - 211036141
+
 # Sobre
 O projeto foi desenvolvido na linguagem c++
 

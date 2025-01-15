@@ -660,6 +660,13 @@ void SegundaPassagem(char *argv[]){
       // Procura operação na Tabela de Instruções
       // Se achou na Tabalea de Instruções:
       if(tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()){
+        int operandosEsperados = tabelaInstrucoes[operacao].tamanho - 1;
+        int operandosFornecidos = 0;
+        if (!operando1.empty()) operandosFornecidos++;
+        if (!operando2.empty()) operandosFornecidos++;
+        if (operandosFornecidos != operandosEsperados) {
+          cerr << "Linha: " << contador_linha << " ERRO SINTÁTICO: Número de operandos errado para a instrução " << operacao << endl;
+        }
         contador_posicao = contador_posicao + tabelaInstrucoes[operacao].tamanho;
         codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
         if(operacao != "BEGIN"){
