@@ -26,8 +26,8 @@ FINAL:
         ZERO: CONST 0
                     ONE: 
                     CONST 1
-                            NEGATIVO: CONST -0x10
         OLDER: SPACE
                         OLD: SPACE
                                     NEW: SPACE
 LIMIT: SPACE
+                                                                NEGATIVO: CONST 0x10

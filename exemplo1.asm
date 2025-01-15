@@ -1,8 +1,7 @@
 SECTION TEXT
-ROT: 
-    INPUT N1
-    COPY N2,N1 ;isso e um comentario
-    STOP
+ROT: INPUT N1
+COPY N2,N1 ;isso e um comentario
+STOP
 SECTION DATA
 N1: SPACE
 N2: SPACE

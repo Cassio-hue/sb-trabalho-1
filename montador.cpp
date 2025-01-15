@@ -6,6 +6,7 @@
 #include <regex>
 #include <map>
 #include <iomanip>
+#include <cstdint>
 
 using namespace std;
 bool PRINT_DEBUG = true;
@@ -635,9 +636,9 @@ void SegundaPassagem(char *argv[]){
         if(operacao == "CONST"){
           informacaoRealocacao+="0 ";
           regex hex_regex("^-?0X[0-9A-Fa-f]+$");
-          int num;
+          int16_t num;
           if (regex_match(operando1, hex_regex)) {
-            num = stoi(operando1, nullptr, 16); 
+            num = static_cast<int16_t>(stoi(operando1, nullptr, 16));
           } 
           else {
             num = stoi(operando1);
@@ -704,7 +705,29 @@ void SegundaPassagem(char *argv[]){
       file << "R, " << informacaoRealocacao << endl;
     }
 
-    file << codigo_objeto;
+    stringstream ss(codigo_objeto);
+    string token;
+    vector<string> numerosProcessados;
+
+    while (ss >> token){
+      if(token == "00"){
+        numerosProcessados.push_back(token);
+      }
+      else{
+        int numero = stoi(token);
+        numerosProcessados.push_back(std::to_string(numero));
+      }
+    }
+
+    string resultado;
+    for (size_t i = 0; i < numerosProcessados.size(); ++i){
+      if (i > 0){
+        resultado += " ";
+      }
+      resultado += numerosProcessados[i];
+    }
+
+    file << resultado;
     file.close();
 
     if (PRINT_FILE_STATUS){
