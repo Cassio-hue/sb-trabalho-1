@@ -139,17 +139,41 @@ void Ligacao(const string& arquivo1, const string& arquivo2){
     codigo_objetoAB[item.second] = to_string(tabelaDefinicoesGlobal[item.first]);
   }
 
-  for(int i = 0; i < correcaoA.size(); i++){
-    if(correcaoA[i] == "1"){
-      codigo_objetoAB[i + fatorCorrecao] = to_string(stoi(codigo_objetoAB[i]) + 0);
-    }
-  }
-
   for(int i = 0; i < correcaoB.size(); i++){
     if(correcaoB[i] == "1"){
       codigo_objetoAB[i + fatorCorrecao] = to_string(stoi(codigo_objetoAB[i + fatorCorrecao]) + fatorCorrecao);
     }
   }
+
+  string codigo_objeto_ligado;
+
+  for(int i = 0; i < codigo_objetoAB.size(); i++){
+    codigo_objeto_ligado += codigo_objetoAB[i] + " ";
+  }
+
+  codigo_objeto_ligado.pop_back();
+
+  stringstream ss(codigo_objeto_ligado);
+    string token;
+    vector<string> numerosProcessados;
+
+    while (ss >> token){
+      if(token == "00"){
+        numerosProcessados.push_back(token);
+      }
+      else{
+        int numero = stoi(token);
+        numerosProcessados.push_back(std::to_string(numero));
+      }
+    }
+
+    string resultado;
+    for (size_t i = 0; i < numerosProcessados.size(); ++i){
+      if (i > 0){
+        resultado += " ";
+      }
+      resultado += numerosProcessados[i];
+    }
 
   if (PRINT_DEBUG) {
     cout << endl;
@@ -165,17 +189,9 @@ void Ligacao(const string& arquivo1, const string& arquivo2){
   string nomeArquivo = arquivo1.substr(0, arquivo1.find_last_of('.')) + ".e";
   ofstream file(nomeArquivo);
 
-  string codigo_objeto_ligado;
-
-  for(int i = 0; i < codigo_objetoAB.size(); i++){
-    codigo_objeto_ligado += codigo_objetoAB[i] + " ";
-  }
-
-  codigo_objeto_ligado.pop_back();
-
   if(file.is_open()){
 
-    file << codigo_objeto_ligado;
+    file << resultado;
     file.close();
 
     if (PRINT_FILE_STATUS){
