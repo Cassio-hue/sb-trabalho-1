@@ -169,6 +169,7 @@ string trim(string &str) {
 string superTrim(string &str) {
     string result = str;
     size_t mais = result.find('+');
+    size_t dois_pontos = result.find(':');
 
     // Remover espaços ao redor do operador '+'
     if (mais != string::npos) {
@@ -179,6 +180,16 @@ string superTrim(string &str) {
         after = trim(after);
 
         result = before + "+" + after;
+    }
+
+    if (dois_pontos != string::npos) {
+        string before = result.substr(0, dois_pontos);
+        string after = result.substr(dois_pontos + 1);
+
+        before = trim(before);
+        after = trim(after);
+
+        result = before + ": " + after;
     }
 
     // Remover espaços ao redor de todas as vírgulas
