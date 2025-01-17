@@ -7,7 +7,7 @@
 #include <map>
 #include <iomanip>
 
-int NUM_EXEMPLOS = 11;
+int NUM_EXEMPLOS = 13;
 // int NUM_LIGACOES = 10;
 
 using namespace std;
