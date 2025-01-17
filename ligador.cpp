@@ -9,8 +9,8 @@
 #include <cctype>
 
 using namespace std;
-bool PRINT_DEBUG = true;
-bool PRINT_FILE_STATUS = true;
+bool PRINT_DEBUG = false;
+bool PRINT_FILE_STATUS = false;
 
 void printTable(const map<string, int>& tabelaDefinicoesGlobal = {}, const vector<pair<string, int>>& tabelaUsoA = {}, const vector<pair<string, int>>& tabelaUsoB = {}){
   if(!tabelaDefinicoesGlobal.empty()){

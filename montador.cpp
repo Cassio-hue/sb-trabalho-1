@@ -9,8 +9,8 @@
 #include <cstdint>
 
 using namespace std;
-bool PRINT_DEBUG = true;
-bool PRINT_FILE_STATUS = true;
+bool PRINT_DEBUG = false;
+bool PRINT_FILE_STATUS = false;
 
 void printTable(
     const map<string, pair<int, char>>& tabelaSimbolos = {}, 
@@ -427,24 +427,21 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           
           rotulo = separacao_instrucao[0];
 
-          // Veririca se o rótulo não é vazio ou composto por espaços em branco.
+          // Veririca se o rótulo é vazio ou composto por espaços em branco.
           if (rotulo.empty()) {
-            cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
-            return;
+            cerr << "Linha: " << contador_linha << " " << "ERRO LEXICO: Rotulo " << rotulo << " invalido" << endl;
           }
-
           // Verifica se o primeiro caractere é uma letra ou underscore.
-          if (!isalpha(rotulo[0]) && rotulo[0] != '_') {
-            cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
-            return;
+          else if (!isalpha(rotulo[0]) && rotulo[0] != '_') {
+            cerr << "Linha: " << contador_linha << " " << "ERRO LEXICO: Rotulo " << rotulo << " invalido" << endl;
           }
-
-          // Procura se existe algum caractere que não seja letra, numero ou underscore.
-          for (int i = 1; i < rotulo.size(); i++) {
-            if (!isalnum(rotulo[i]) && rotulo[i] != '_') {
-              cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Rotulo " << rotulo << " invalido" << endl;
-              return;
-            }
+          else {
+            // Procura se existe algum caractere que não seja letra, numero ou underscore.
+            for (int i = 1; i < rotulo.size(); i++) {
+              if (!isalnum(rotulo[i]) && rotulo[i] != '_') {
+                cerr << "Linha: " << contador_linha << " " << "ERRO LEXICO: Rotulo " << rotulo << " invalido" << endl;
+              }
+          }
           }
 
           operacao = split(superTrim(separacao_instrucao[1]), " ")[0];
@@ -452,7 +449,7 @@ void PrimeiraPassagem(int argc, char *argv[]) {
           // Procura rótulo na Tabela de Símbolos
           if (tabelaSimbolos.find(rotulo) != tabelaSimbolos.end()) {
             // Se achou: Erro à símbolo redefinido
-            cerr << "Linha: " << contador_linha << " " << "ERRO SINTÁTICO: Erro símbolo " << rotulo << " redefinido" << endl;
+            cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Erro simbolo " << rotulo << " redefinido" << endl;
           } else {
             // Se achou: contador_posição = contador_posição + valor da diretiva
             if (regex_search(operacao, regex_space)) {
@@ -496,8 +493,9 @@ void PrimeiraPassagem(int argc, char *argv[]) {
 
             tabelaSimbolos[rotulo] = {contador_posicao, 'N'};
           }
-
-          contador_posicao += tabelaInstrucoes[operacao].tamanho;
+          if (tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()) {
+            contador_posicao += tabelaInstrucoes[operacao].tamanho;
+          }
         }
         // Se não existe rótulo:
         else {
@@ -522,8 +520,6 @@ void PrimeiraPassagem(int argc, char *argv[]) {
               continue;
             }
 
-            cerr << "Linha: " << contador_linha << " " << "ERRO SINTÁTICO: operação " << operacao << " não identificada" << endl;
-            return;
           }
         }
 
@@ -589,9 +585,19 @@ void SegundaPassagem(char *argv[]){
         }
         else if(instrucao.size() == 3){
           if(operacao == "COPY"){
-            vector<string> operandos = split(instrucao[2], ",");
-            operando1 = operandos[0];
-            operando2 = operandos[1];
+            if (instrucao[2].find(',') != string::npos) {
+              vector<string> operandos = split(instrucao[2], ",");
+              operando1 = operandos[0];
+              operando2 = operandos[1];
+            } else {
+              operando1 = "";
+              operando2 = "";
+            }
+          }
+          else if (instrucao[1].find(',') != string::npos) {
+            vector<string> split_operando = split(instrucao[2], ",");
+            operando1 = split_operando[0];
+            operando2 = split_operando[1];
           }
           else{
             operando1 = instrucao[2];
@@ -608,9 +614,19 @@ void SegundaPassagem(char *argv[]){
         }
         else if(instrucao.size() == 2){
           if(operacao == "COPY"){
-            vector<string> operandos = split(instrucao[1], ",");
-            operando1 = operandos[0];
-            operando2 = operandos[1];
+            if (instrucao[1].find(',') != string::npos) {
+              vector<string> operandos = split(instrucao[1], ",");
+              operando1 = operandos[0];
+              operando2 = operandos[1];
+            } else {
+              operando1 = "";
+              operando2 = "";
+            }
+          }
+          else if (instrucao[1].find(',') != string::npos) {
+            vector<string> split_operando = split(instrucao[1], ",");
+            operando1 = split_operando[0];
+            operando2 = split_operando[1];
           }
           else{
             operando1 = instrucao[1];
@@ -624,22 +640,26 @@ void SegundaPassagem(char *argv[]){
             vector<string> split_operando = split(operando1, "+");
             operandoPuro1 = split_operando[0];
             operandoPuro1Valor = stoi(split_operando[1]);
-            if(tabelaSimbolos[operandoPuro1].second == 'S'){
-              int endereco = contador_posicao + 1;
-              tabelaUso.push_back(make_pair(operandoPuro1, endereco));
+            if(tabelaSimbolos.find(operandoPuro1) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operandoPuro1].second == 'S'){
+                int endereco = contador_posicao + 1;
+                tabelaUso.push_back(make_pair(operandoPuro1, endereco));
+              }
             }
-            if(tabelaSimbolos.find(operandoPuro1) == tabelaSimbolos.end()){
-              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            else if(tabelaSimbolos.find(operandoPuro1) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO SEMANTICO: Rotulo "<< operandoPuro1 << " ausente" << endl;
             }
           } 
           else {
             operandoPuro1 = operando1;
-            if(tabelaSimbolos[operando1].second == 'S'){
-              int endereco = contador_posicao + 1;
-              tabelaUso.push_back(make_pair(operando1, endereco));
+            if(tabelaSimbolos.find(operando1) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operando1].second == 'S'){
+                int endereco = contador_posicao + 1;
+                tabelaUso.push_back(make_pair(operando1, endereco));
+              }
             }
-            if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
-              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            else if(tabelaSimbolos.find(operando1) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO SEMANTICO: Rotulo " << operando1 << " ausente" << endl;
             }
           }
         }
@@ -648,22 +668,26 @@ void SegundaPassagem(char *argv[]){
             vector<string> split_operando = split(operando2, "+");
             operandoPuro2 = split_operando[0];
             operandoPuro2Valor = stoi(split_operando[1]);
-            if(tabelaSimbolos[operandoPuro2].second == 'S'){
-              int endereco = contador_posicao + 1;
-              tabelaUso.push_back(make_pair(operandoPuro2, endereco));
+            if(tabelaSimbolos.find(operandoPuro2) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operandoPuro2].second == 'S'){
+                int endereco = contador_posicao + 1;
+                tabelaUso.push_back(make_pair(operandoPuro2, endereco));
+              }
             }
-            if (tabelaSimbolos.find(operandoPuro2) == tabelaSimbolos.end()){
-              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            else if (tabelaSimbolos.find(operandoPuro2) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO SEMANTICO: Rotulo " << operandoPuro2 << " ausente" << endl;
             }
           } 
           else {
             operandoPuro2 = operando2;
-            if(tabelaSimbolos[operando2].second == 'S'){
-              int endereco = contador_posicao + 2;
-              tabelaUso.push_back(make_pair(operando2, endereco));
+            if(tabelaSimbolos.find(operando2) != tabelaSimbolos.end()){
+              if(tabelaSimbolos[operando2].second == 'S'){
+                int endereco = contador_posicao + 2;
+                tabelaUso.push_back(make_pair(operando2, endereco));
+              }
             }
-            if (tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
-              cerr << "Linha: " << contador_linha << " " << "ERRO: Simbolo Indefinido" << endl;
+            else if (tabelaSimbolos.find(operando2) == tabelaSimbolos.end()){
+              cerr << "Linha: " << contador_linha << " " << "ERRO SEMANTICO: Rotulo "<< operando2 << " ausente" << endl;
             }
           }
         }
@@ -673,10 +697,10 @@ void SegundaPassagem(char *argv[]){
       if(tabelaInstrucoes.find(operacao) != tabelaInstrucoes.end()){
         int operandosEsperados = tabelaInstrucoes[operacao].tamanho - 1;
         int operandosFornecidos = 0;
-        if (!operando1.empty()) operandosFornecidos++;
-        if (!operando2.empty()) operandosFornecidos++;
+        if (!operandoPuro1.empty()) operandosFornecidos++;
+        if (!operandoPuro2.empty()) operandosFornecidos++;
         if (operandosFornecidos != operandosEsperados) {
-          cerr << "Linha: " << contador_linha << " ERRO SINTÁTICO: Número de operandos errado para a instrução " << operacao << endl;
+          cerr << "Linha: " << contador_linha << " ERRO SINTATICO: Numero de operandos errado para a instrucao " << operacao << endl;
         }
         contador_posicao = contador_posicao + tabelaInstrucoes[operacao].tamanho;
         codigo_objeto = codigo_objeto + tabelaInstrucoes[operacao].opcode + " ";
@@ -685,7 +709,12 @@ void SegundaPassagem(char *argv[]){
         }
         // Se o número e o tipo dos operandos está correto então gera código objeto conforme formato da instrução:
         if(operando1 != ""){
-          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro1].first + operandoPuro1Valor) + " ";
+          if(tabelaSimbolos.find(operandoPuro1) != tabelaSimbolos.end()){
+            codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro1].first + operandoPuro1Valor) + " ";
+          }
+          else{
+            codigo_objeto = codigo_objeto + "0 ";
+          }
           if(tabelaDefinicoes.find(operandoPuro1) != tabelaDefinicoes.end()){
             informacaoRealocacao+="1 ";
           }
@@ -701,7 +730,12 @@ void SegundaPassagem(char *argv[]){
           }
         }
         if(operando2 != ""){
-          codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro2].first + operandoPuro2Valor) + " ";
+          if(tabelaSimbolos.find(operandoPuro2) != tabelaSimbolos.end()){
+            codigo_objeto = codigo_objeto + to_string(tabelaSimbolos[operandoPuro2].first + operandoPuro2Valor) + " ";
+          }
+          else{
+            codigo_objeto = codigo_objeto + "0 " ;
+          }
           if(tabelaDefinicoes.find(operandoPuro2) != tabelaDefinicoes.end()){
             informacaoRealocacao+="1 ";
           }
@@ -753,7 +787,7 @@ void SegundaPassagem(char *argv[]){
       }
       // Se não achou na Tabela de Diretivas:
       else {
-        cerr << "ERRO: Operacao Nao Identificada" << endl;
+        cerr << "Linha: " << contador_linha << " " << "ERRO SINTATICO: Instrucao ou Diretiva " << operacao << " invalida" << endl;
       }
     }
     contador_linha = contador_linha + 1;
@@ -780,11 +814,13 @@ void SegundaPassagem(char *argv[]){
     if(ligacao){
       // Imprimindoa tabela de relativos e absolutos;
       if (!informacaoRealocacao.empty()) {
-        cout << "Tabela de Relativos e Absolutos" << endl;
-        for(int i = 0; i < informacaoRealocacao.size(); i++){
-          cout << informacaoRealocacao[i];
+        if(PRINT_DEBUG){
+          cout << "Tabela de Relativos e Absolutos" << endl;
+          for(int i = 0; i < informacaoRealocacao.size(); i++){
+            cout << informacaoRealocacao[i];
+          }
+          cout << endl;
         }
-        cout << endl;
       }
       for (const auto& x : tabelaDefinicoes){
         file << "D, " << x.first << " " << x.second << endl;
